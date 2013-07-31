@@ -3,9 +3,10 @@ Formulator Tests
 """
 import importlib
 
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.test import TestCase
-from formulator.models import Form, Field, FieldSet, ValidationError  # FormField
+from formulator.models import Form, Field, FieldSet
 from floppyforms.forms import BaseForm
 from floppyforms import forms
 
@@ -43,7 +44,7 @@ class CreateEmptyFormTest(TestCase):
         """
         The class factory needs a name, classes without names seem wrong
         """
-        form_class = Form()
+        form_class = Form.objects.create()
         self.assertRaises(ValidationError, form_class.form_class_factory)
 
     def test_unsaved_form_factory(self):
