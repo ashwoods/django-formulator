@@ -5,7 +5,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from model_utils import Choices
 from autoslug import AutoSlugField
-
+from positions import PositionField
 from crispy_forms.helper import FormHelper
 from crispy_forms import layout
 
@@ -31,7 +31,7 @@ class Form(models.Model):
 
     METHODS = Choices((0, 'get', 'GET'), (1, 'post', 'POST'))
 
-    name = models.CharField(max_length=100, help_text='Name of the Form type', validators=[validate_non_empty_string])
+    name = models.CharField(max_length=100, help_text='Name of the Form type')
     slug = AutoSlugField(unique=True, populate_from='name')  # will be used to autopopulate the ID
 
     # form attributes
@@ -52,9 +52,7 @@ class Form(models.Model):
         return u"formulator.Form instance: %s" % self.slug
 
     def save(self, *args, **kwargs):
-        self.full_clean(exclude=['id'])
         super(Form, self).save(*args, **kwargs)
-
 
     @property
     def fieldsets(self):
@@ -95,6 +93,7 @@ class FieldSet(models.Model):
     """
     """
     form = models.ForeignKey(Form)
+    position = PositionField(collection='form')
     name = models.CharField(max_length=100)
     legend = models.CharField(max_length=100)
 
@@ -109,6 +108,7 @@ class Field(models.Model):
     """
     formset = models.ForeignKey(FieldSet)
     name = models.CharField(max_length=100, )
+    position = PositionField(collection='formset')
     slug = AutoSlugField(unique=True, populate_from='name')
 
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
