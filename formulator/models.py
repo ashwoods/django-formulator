@@ -15,11 +15,6 @@ import jsonfield
 from formulator.conf import settings
 
 
-def validate_non_empty_string(value):
-    if len(value) <= 0:
-        raise ValidationError(u'%s is an empty string.' % value)
-
-
 class Form(models.Model):
     """
     Form class
