@@ -2,7 +2,6 @@ import importlib
 
 from django.utils.translation import ugettext as _
 from django.db import models
-from django.core.exceptions import ValidationError
 from model_utils import Choices
 from autoslug import AutoSlugField
 from positions import PositionField
@@ -62,7 +61,7 @@ class Form(models.Model):
 
         attrs = {}
         fields = {}
-        fieldsets = []
+        #fieldsets = []
         layouts = []
 
         for fieldset in self.fieldsets:
@@ -127,8 +126,6 @@ class Field(models.Model):
     hidden = models.BooleanField()
     help_text = models.TextField(blank=True,
                                  help_text=_("An optional string to use as 'help text' for this Field."))
-
-
     attrs = jsonfield.JSONField()
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
