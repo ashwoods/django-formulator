@@ -2,7 +2,7 @@
 
 test:
 	flake8 formulator --ignore=E501,E127,E128,E124 --filename=*.py --exclude=static,migrations,tests
-	coverage run --branch --source=formulator `which django-admin.py` test formulator --settings=formulator.test_settings
+	coverage run --branch --source=formulator `which django-admin.py` test formulator -v 2 --settings=formulator.test_settings
 	coverage report --omit=formulator/test*
 
 release:

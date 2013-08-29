@@ -81,7 +81,9 @@ class CreateFormFields(TestCase):
         form_class = Form(name='test')
         form_class.save()
 
-        fieldset = FieldSet(form=form_class, name='fieldset_1', legend='This is a legend')
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
         fieldset.save()
 
         fields = {}
@@ -99,10 +101,41 @@ class CreateFormFields(TestCase):
             if field_name in REQUIRE_EXTRA_PARAMS:
                 pass
             else:
-                fields[field_name.lower()] = Field.objects.create(name=field_name, formset=fieldset, field=field_name, label=field_name.lower())
+                fields[field_name.lower()] = Field.objects.create(
+                    name=field_name,
+                    formset=fieldset,
+                    field=field_name,
+                    label=field_name.lower())
         self.assertTrue(issubclass(form_class.form_class_factory(), BaseForm))
+
+
+    def test_field_ordering(self):
+        raise NotImplementedError
+
+    def test_required_field(self):
+        raise NotImplementedError
+
+    def test_placeholder(self):
+        raise NotImplementedError
+
+    def test_hidden(self):
+        raise NotImplementedError
+
+    def test_help_text(self):
+        raise NotImplementedError
+
+    def test_label(self):
+        raise NotImplementedError
+
+
+
 
 
 class CreateRegistrationForm(TestCase):
     """A floppy forms test"""
-    pass
+
+    def test_create_registration_form(self):
+        form_class = Form(name='test')
+        form_class.save()
+
+
