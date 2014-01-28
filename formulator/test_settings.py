@@ -26,4 +26,4 @@ TEMPLATE_DIRS = (
     # os.path.join(TEST_DIR, 'test_templates'),
 )
 
-TEST_RUNNER = 'discover_runner.DiscoverRunner'
+#TEST_RUNNER = 'discover_runner.DiscoverRunner'

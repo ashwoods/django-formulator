@@ -23,7 +23,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=required,
-    tests_require=['django-discover-runner', 'coverage', 'flake8'],
+    tests_require=['coverage', 'flake8'],
     url='',
     license='BSD License',
     description=u' '.join(__import__('formulator').__doc__.splitlines()).strip(),
