@@ -98,7 +98,6 @@ class FieldSet(models.Model):
 
 class Field(models.Model):
     """
-
     """
     formset = models.ForeignKey(FieldSet)
     name = models.CharField(max_length=100, )
@@ -136,7 +135,12 @@ class Field(models.Model):
         module_name, class_name = field_class.rsplit(".", 1)
         module = importlib.import_module(module_name)
         field = getattr(module, class_name)
-        return field(label=self.label)
+        attribs = { "position":self.position,
+                    "required":self.required,
+                    "hidden":self.hidden,
+                    "attrs":self.attrs
+                  }
+        return type(str(self.label), (field,), attribs)
 
     def __unicode__(self):
         return u"Form instance: %s" % self.slug

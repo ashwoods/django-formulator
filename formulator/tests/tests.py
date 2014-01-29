@@ -14,6 +14,12 @@ from formulator.conf import settings
 
 
 FIELDS = settings.FORMULATOR_FIELDS
+REQUIRE_EXTRA_PARAMS = [
+                        'RegexField',
+                        'ComboField',
+                        'TypedMultipleChoiceField',
+                        'FilePathField',
+]
 
 
 # class RegistrationForm(forms.Form):
@@ -74,11 +80,13 @@ class CreateEmptyFormTest(TestCase):
 
 class CreateFormFields(TestCase):
 
-    def test_form_with_default_fields(self):
+    form_class_instance = None
+
+    def setUp(self):
         """
-        Test that we have an instance form with fields
+        Set up: creates and saves models for form instance creation
         """
-        form_class = Form(name='test')
+        form_class = Form(name='CustomForm')
         form_class.save()
 
         fieldset = FieldSet(form=form_class,
@@ -87,13 +95,6 @@ class CreateFormFields(TestCase):
         fieldset.save()
 
         fields = {}
-
-        REQUIRE_EXTRA_PARAMS = [
-                                'RegexField',
-                                'ComboField',
-                                'TypedMultipleChoiceField',
-                                'FilePathField',
-        ]
 
         for field_type in FIELDS:
             field_class = field_type[1]
@@ -106,32 +107,31 @@ class CreateFormFields(TestCase):
                                                 formset=fieldset,
                                                 field=field_name,
                                                 label=field_name.lower(),
-                                            )
-        self.assertTrue(issubclass(form_class.form_class_factory(), BaseForm))
+                )
+
+        self.form_class_instance = form_class.form_class_factory()
+
+    def test_form_with_default_fields(self):
+        """
+        Test that we have an instance form with fields
+        """
+        
+        self.assertTrue(issubclass(self.form_class_instance, BaseForm))
 
 
     def test_field_ordering(self):
         """
-        Test that fields are assigned an adecuate position value according to order
+        Test that fields are ordered correctly according to position value
         """
-        form_class = Form(name='test')
-        form_class.save()
+        fields = self.form_class_instance.base_fields
 
-        fieldset = FieldSet(form=form_class,
-                            name='fieldset_1',
-                            legend='This is a legend')
-        fieldset.save()
-
-        field_1 = Field(name='field_1', formset=fieldset,)
-        field_1.save()
-
-        field_2 = Field(name='field_2', formset=fieldset,)
-        field_2.save()
-
-        field_3 = Field(name='field_3', formset=fieldset,)
-        field_3.save()
-
-        self.assertTrue(field_1.position < field_2.position < field_3.position)
+        for field_type in FIELDS:
+            field_name = field_type[0]
+            if field_name in REQUIRE_EXTRA_PARAMS:
+                pass
+            else:
+                field = fields[field_name]
+                print field.position, field.__name__
 
     def test_required_field(self):
         form_class = Form(name='test')
