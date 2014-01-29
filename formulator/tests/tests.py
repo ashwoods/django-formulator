@@ -102,33 +102,106 @@ class CreateFormFields(TestCase):
                 pass
             else:
                 fields[field_name.lower()] = Field.objects.create(
-                    name=field_name,
-                    formset=fieldset,
-                    field=field_name,
-                    label=field_name.lower())
+                                                name=field_name,
+                                                formset=fieldset,
+                                                field=field_name,
+                                                label=field_name.lower(),
+                                            )
         self.assertTrue(issubclass(form_class.form_class_factory(), BaseForm))
 
 
     def test_field_ordering(self):
-        raise NotImplementedError
+        """
+        Test that fields are assigned an adecuate position value according to order
+        """
+        form_class = Form(name='test')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        field_1 = Field(name='field_1', formset=fieldset,)
+        field_1.save()
+
+        field_2 = Field(name='field_2', formset=fieldset,)
+        field_2.save()
+
+        field_3 = Field(name='field_3', formset=fieldset,)
+        field_3.save()
+
+        self.assertTrue(field_1.position < field_2.position < field_3.position)
 
     def test_required_field(self):
-        raise NotImplementedError
+        form_class = Form(name='test')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        field_1 = Field(name='field_1', formset=fieldset, required=True)
+        field_1.save()
+
+        self.assertTrue(field_1.required)
 
     def test_placeholder(self):
-        raise NotImplementedError
+        form_class = Form(name='test')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        field_1 = Field(name='field_1', formset=fieldset, attrs={"placeholder": "test placeholder"})
+        field_1.save()
+
+        self.assertEquals(field_1.attrs["placeholder"], "test placeholder")
 
     def test_hidden(self):
-        raise NotImplementedError
+        form_class = Form(name='test')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        field_1 = Field(name='field_1', formset=fieldset, hidden=True)
+        field_1.save()
+
+        self.assertTrue(field_1.hidden)
 
     def test_help_text(self):
-        raise NotImplementedError
+        form_class = Form(name='test')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        field_1 = Field(name='field_1', formset=fieldset, help_text="test help text")
+        field_1.save()
+
+        self.assertEquals(field_1.help_text, "test help text")
 
     def test_label(self):
-        raise NotImplementedError
+        form_class = Form(name='test')
+        form_class.save()
 
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
 
+        field_1 = Field(name='field_1', formset=fieldset, label="test label")
+        field_1.save()
 
+        self.assertEquals(field_1.label, "test label")
 
 
 class CreateRegistrationForm(TestCase):

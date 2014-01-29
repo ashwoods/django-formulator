@@ -112,7 +112,7 @@ class Field(models.Model):
                                            default Widget that it'll use if you don't specify this. In
                                            most cases, the default widget is TextInput.""")
 
-    required = models.BooleanField(help_text=_('Boolean that specifies whether the field is required.'))
+    required = models.BooleanField(default=False, help_text=_('Boolean that specifies whether the field is required.'))
     label = models.CharField(max_length=100, blank=True,
                              help_text=_("""A verbose name for this field, for use in displaying this
                                             field in a form. By default, Django will use a "pretty"
@@ -123,9 +123,8 @@ class Field(models.Model):
                                help_text=_("""A value to use in this Field's initial display. This value
                                               is *not* used as a fallback if data isn't given. """))
 
-    hidden = models.BooleanField()
-    help_text = models.TextField(blank=True,
-                                 help_text=_("An optional string to use as 'help text' for this Field."))
+    hidden = models.BooleanField(default=False, help_text=_('Boolean that specifies whether the field is hidden.'))
+    help_text = models.TextField(blank=True, help_text=_("An optional string to use as 'help text' for this Field."))
     attrs = jsonfield.JSONField()
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
