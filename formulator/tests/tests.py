@@ -107,15 +107,29 @@ class CreateFormFields(TestCase):
                                                 formset=fieldset,
                                                 field=field_name,
                                                 label=field_name.lower(),
+                                                help_text="test help text",
+                                                attrs={"placeholder":"test placeholder"}
                 )
 
         self.form_class_instance = form_class.form_class_factory()
+
+
+    def field_getter(self):
+        fields = self.form_class_instance.base_fields
+
+        for field_type in FIELDS:
+            field_name = field_type[0]
+            if field_name in REQUIRE_EXTRA_PARAMS:
+                pass
+            else: 
+                field = fields[field_name]
+                yield field
+
 
     def test_form_with_default_fields(self):
         """
         Test that we have an instance form with fields
         """
-        
         self.assertTrue(issubclass(self.form_class_instance, BaseForm))
 
 
@@ -123,85 +137,47 @@ class CreateFormFields(TestCase):
         """
         Test that fields are ordered correctly according to position value
         """
-        fields = self.form_class_instance.base_fields
+        g = self.field_getter()
+        previous_field = g.next()
 
-        for field_type in FIELDS:
-            field_name = field_type[0]
-            if field_name in REQUIRE_EXTRA_PARAMS:
-                pass
-            else:
-                field = fields[field_name]
-                print field.position, field.__name__
+        for field in g:        
+            self.assertTrue(field.position > previous_field.position)
+            previous_field = field
 
     def test_required_field(self):
-        form_class = Form(name='test')
-        form_class.save()
-
-        fieldset = FieldSet(form=form_class,
-                            name='fieldset_1',
-                            legend='This is a legend')
-        fieldset.save()
-
-        field_1 = Field(name='field_1', formset=fieldset, required=True)
-        field_1.save()
-
-        self.assertTrue(field_1.required)
+        """
+        Test that fields required attribute is set to false by default
+        """
+        for field in self.field_getter():        
+            self.assertFalse(field.required)
 
     def test_placeholder(self):
-        form_class = Form(name='test')
-        form_class.save()
-
-        fieldset = FieldSet(form=form_class,
-                            name='fieldset_1',
-                            legend='This is a legend')
-        fieldset.save()
-
-        field_1 = Field(name='field_1', formset=fieldset, attrs={"placeholder": "test placeholder"})
-        field_1.save()
-
-        self.assertEquals(field_1.attrs["placeholder"], "test placeholder")
+        """
+        Test that the placeholder attribute is set
+        """
+        for field in self.field_getter():        
+            self.assertEquals(field.attrs["placeholder"], "test placeholder")
 
     def test_hidden(self):
-        form_class = Form(name='test')
-        form_class.save()
-
-        fieldset = FieldSet(form=form_class,
-                            name='fieldset_1',
-                            legend='This is a legend')
-        fieldset.save()
-
-        field_1 = Field(name='field_1', formset=fieldset, hidden=True)
-        field_1.save()
-
-        self.assertTrue(field_1.hidden)
+        """
+        Test that the hidden attribute is set to false by default
+        """
+        for field in self.field_getter():        
+            self.assertFalse(field.hidden)
 
     def test_help_text(self):
-        form_class = Form(name='test')
-        form_class.save()
-
-        fieldset = FieldSet(form=form_class,
-                            name='fieldset_1',
-                            legend='This is a legend')
-        fieldset.save()
-
-        field_1 = Field(name='field_1', formset=fieldset, help_text="test help text")
-        field_1.save()
-
-        self.assertEquals(field_1.help_text, "test help text")
+        """
+        Test that the help text can be set
+        """
+        for field in self.field_getter():        
+            self.assertEquals(field.help_text, "test help text")
 
     def test_label(self):
-        form_class = Form(name='test')
-        form_class.save()
-
-        fieldset = FieldSet(form=form_class,
-                            name='fieldset_1',
-                            legend='This is a legend')
-        fieldset.save()
-
-        field_1 = Field(name='field_1', formset=fieldset, label="test label")
-        field_1.save()
-
-        self.assertEquals(field_1.label, "test label")
+        """
+        Test that the field label is set
+        """
+        for field in self.field_getter():        
+            self.assertEquals(field.label, field.name.lower())
 
 
 class CreateRegistrationForm(TestCase):

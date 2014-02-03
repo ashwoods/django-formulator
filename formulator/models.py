@@ -28,16 +28,20 @@ class Form(models.Model):
     name = models.CharField(max_length=100, help_text='Name of the Form type')
     slug = AutoSlugField(unique=True, populate_from='name')  # will be used to autopopulate the ID
 
-    # form attributes
+    # HTML5 FORM ATTRIBUTES
+
+    # crispy-forms helper attributes
     form_name = models.CharField(max_length=100, blank=True)
     form_action = models.CharField(max_length=250, blank=True)
     form_method = models.IntegerField(max_length=10, choices=METHODS, default=METHODS.get)
 
+    # other form attributes
     form_accept_charset = models.CharField(max_length=100, blank=True)
     form_autocomplete = models.BooleanField(default=False)
     form_novalidate = models.BooleanField(default=False)
     form_enctype = models.IntegerField(choices=ENCTYPES, default=ENCTYPES.urlencoded)
     form_target = models.CharField(max_length=50, blank=True)
+
 
     # json field for global and event attributes, including class, id, etc...
     attrs = jsonfield.JSONField()
@@ -76,6 +80,18 @@ class Form(models.Model):
         attrs['base_fields'] = fields
 
         helper = FormHelper()
+
+        helper.form_class = form_class
+        helper.form_id = self.form_name
+        helper.form_action = self.form_action
+        helper.form_method = self.METHODS[self.form_method]
+        helper.attrs = {'accept-charset': self.form_accept_charset,
+                        'autocomplete': self.form_autocomplete,
+                        'novalidate': self.form_novalidate,
+                        'enctype': self.form_enctype,
+                        'target': self.form_target
+        }
+
         helper.layout = layout.Layout(*layouts)
 
         attrs['helper'] = helper
@@ -135,12 +151,15 @@ class Field(models.Model):
         module_name, class_name = field_class.rsplit(".", 1)
         module = importlib.import_module(module_name)
         field = getattr(module, class_name)
-        attribs = { "position":self.position,
-                    "required":self.required,
-                    "hidden":self.hidden,
-                    "attrs":self.attrs
-                  }
-        return type(str(self.label), (field,), attribs)
+        attrs = { "name":self.name,
+                  "position":self.position,
+                  "required":self.required,
+                  "label":self.label,
+                  "hidden":self.hidden,
+                  "help_text":self.help_text,
+                  "attrs":self.attrs
+                }
+        return type(str(self.label), (field,), attrs)
 
     def __unicode__(self):
         return u"Form instance: %s" % self.slug
