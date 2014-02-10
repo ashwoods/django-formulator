@@ -46,7 +46,6 @@ class RegistrationForm(forms.Form):
         if self.errors:
             raise ValidationError(u'Please correct the errors below.')
 
-
 class CreateEmptyFormTest(TestCase):
 
     def test_no_name_factory(self):
@@ -63,7 +62,7 @@ class CreateEmptyFormTest(TestCase):
         We don't have to save the object (although makes little sense),
         """
         form_class = Form(name='test')
-        self.assertTrue(issubclass(form_class.form_class_factory(), forms.BaseForm))
+        self.assertTrue(issubclass(form_class.form_class_factory(), forms.Form))
 
     def test_saved_form_factory(self):
         """
@@ -71,7 +70,7 @@ class CreateEmptyFormTest(TestCase):
         """
         form_class = Form(name='test')
         form_class.save()
-        self.assertTrue(issubclass(form_class.form_class_factory(), forms.BaseForm))
+        self.assertTrue(issubclass(form_class.form_class_factory(), forms.Form))
 
     def test_form_instance(self):
         """
@@ -116,6 +115,7 @@ class CreateFormFields(TestCase):
         self.form_class = form_class.form_class_factory()
 
         # A generator providing the fields in the form
+        #import ipdb; ipdb.set_trace()
         self.field_getter = self.form_class.base_fields.itervalues()
 
 
@@ -123,7 +123,7 @@ class CreateFormFields(TestCase):
         """
         Test that we have an instance form with fields
         """
-        self.assertTrue(issubclass(self.form_class, forms.BaseForm))
+        self.assertTrue(issubclass(self.form_class, forms.Form))
 
 
     def test_field_ordering(self):
@@ -224,7 +224,7 @@ class CreateRegistrationForm(TestCase):
                                 formset=fieldset
         )
 
-        RegistrationFormClone = form_class.form_class_factory(forms.Form)
+        RegistrationFormClone = form_class.form_class_factory()
         
         #import ipdb; ipdb.set_trace()
 

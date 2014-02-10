@@ -58,7 +58,7 @@ class Form(models.Model):
     def fieldsets(self):
         return self.fieldset_set.all()
 
-    def form_class_factory(self, form_class=forms.BaseForm):
+    def form_class_factory(self, form_class=forms.Form):
         # again make sure that we have everything we need to create a class
         self.full_clean()
 
@@ -73,9 +73,7 @@ class Form(models.Model):
             layouts.append(fieldset_layout)
 
             for field in fieldset_fields:
-                fields[field.name] = field.formfield_instance_factory()
-
-        attrs['base_fields'] = fields
+                attrs[field.name] = field.formfield_instance_factory()
 
         helper = FormHelper()
 
@@ -92,9 +90,6 @@ class Form(models.Model):
         helper.layout = layout.Layout(*layouts)
 
         attrs['helper'] = helper
-
-        if hasattr(form_class, 'base_fields'):
-            form_class.base_fields = fields
 
         return type(str(self.form_id), (form_class,), attrs)
 
@@ -123,7 +118,7 @@ class Field(models.Model):
     attrs = jsonfield.JSONField()
     slug = AutoSlugField(unique=True, populate_from='name')
 
-   required = models.BooleanField(default=True, help_text=_('Boolean that specifies whether the field is required.'))
+    required = models.BooleanField(default=True, help_text=_('Boolean that specifies whether the field is required.'))
     widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
                               help_text=_("""A Widget class, or instance of a Widget class, that should
                                            be used for this Field when displaying it. Each Field has a
