@@ -29,7 +29,7 @@ class RegistrationForm(forms.Form):
     honeypot = forms.CharField(required=False, widget=forms.HiddenInput)
     firstname = forms.CharField(label=_(u'Your first name?'))
     lastname = forms.CharField(label=_(u'Your last name:'))
-    username = forms.CharField(max_length=30)
+    username = forms.CharField(widget=forms.TextInput(attrs={'max_length':30, 'placeholder': 'username here'}))
     password = forms.CharField(
         widget=forms.PasswordInput,
         help_text=_(u'Make sure to use a secure password.'),
@@ -109,6 +109,7 @@ class CreateFormFields(TestCase):
                                      field=field_name,
                                      label=field_name,
                                      help_text="test help text",
+                                     attrs={"placeholder":field_name}
                 )
 
         # Class variable for the form class
@@ -116,7 +117,6 @@ class CreateFormFields(TestCase):
 
         # A generator providing the fields in the form
         self.field_getter = self.form_class.base_fields.itervalues()
-        #import ipdb; ipdb.set_trace()
 
 
     def test_form_with_default_fields(self):
@@ -145,8 +145,8 @@ class CreateFormFields(TestCase):
         """
         Test that the placeholder attribute is set
         """
-        for field in self.field_getter:        
-            pass
+        for field in self.field_getter:
+            self.assertEquals(field.widget.attrs['placeholder'], field.label)
 
     def test_hidden(self):
         """
@@ -203,7 +203,7 @@ class CreateRegistrationForm(TestCase):
         )
         Field.objects.create(   name="username",
                                 field="CharField",
-                                attrs={"max_length":"30"},
+                                attrs={"max_length":"30", "placeholder":"username here"},
                                 formset=fieldset
         )
         Field.objects.create(   name="password",
@@ -224,11 +224,11 @@ class CreateRegistrationForm(TestCase):
                                 formset=fieldset
         )
 
-        RegistrationFormClone = form_class.form_class_factory()
+        RegistrationFormClone = form_class.form_class_factory(forms.Form)
         
-#        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
 
-        # Asert that the HTML generated is the same
+        # Assert that the HTML generated is the same
         self.assertEquals(RegistrationFormClone().as_p(), RegistrationForm().as_p(),)
 
     def test_compare_registration_form(self):

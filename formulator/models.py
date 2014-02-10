@@ -1,7 +1,7 @@
 import importlib
 
 from django.utils.translation import ugettext as _
-from django.utils.datastructures import SortedDict
+from collections import OrderedDict
 
 from django.db import models
 from model_utils import Choices
@@ -58,15 +58,12 @@ class Form(models.Model):
     def fieldsets(self):
         return self.fieldset_set.all()
 
-    def form_class_factory(self, form_class=None):
+    def form_class_factory(self, form_class=forms.BaseForm):
         # again make sure that we have everything we need to create a class
         self.full_clean()
 
-        if form_class is None:
-            form_class = forms.BaseForm
-
         attrs = {}
-        fields = SortedDict() 
+        fields = OrderedDict() 
         layouts = []
 
         for fieldset in self.fieldsets:
@@ -96,6 +93,9 @@ class Form(models.Model):
 
         attrs['helper'] = helper
 
+        if hasattr(form_class, 'base_fields'):
+            form_class.base_fields = fields
+
         return type(str(self.form_id), (form_class,), attrs)
 
 
@@ -121,30 +121,9 @@ class Field(models.Model):
 
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
     attrs = jsonfield.JSONField()
-    #slug = AutoSlugField(unique=True, populate_from='name')
+    slug = AutoSlugField(unique=True, populate_from='name')
 
-    # FIELD INSTANCE ATTIBUTES
-        # required -- Boolean that specifies whether the field is required.
-        # True by default.
-        # widget -- A Widget class, or instance of a Widget class, that should
-        # be used for this Field when displaying it. Each Field has a
-        # default Widget that it'll use if you don't specify this. In
-        # most cases, the default widget is TextInput.
-        # label -- A verbose name for this field, for use in displaying this
-        # field in a form. By default, Django will use a "pretty"
-        # version of the form field name, if the Field is part of a
-        # Form.
-        # initial -- A value to use in this Field's initial display. This value
-        # is *not* used as a fallback if data isn't given.
-        # help_text -- An optional string to use as "help text" for this Field.
-        # error_messages -- An optional dictionary to override the default
-        # messages that the field will raise.
-        # show_hidden_initial -- Boolean that specifies if it is needed to render a
-        # hidden widget with initial value after widget.
-        # validators -- List of addtional validators to use
-        # localize -- Boolean that specifies if the field should be localized.
-
-    required = models.BooleanField(default=True, help_text=_('Boolean that specifies whether the field is required.'))
+   required = models.BooleanField(default=True, help_text=_('Boolean that specifies whether the field is required.'))
     widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
                               help_text=_("""A Widget class, or instance of a Widget class, that should
                                            be used for this Field when displaying it. Each Field has a
@@ -179,7 +158,7 @@ class Field(models.Model):
         field = getattr(module, class_name)
         
         # Get the widget class for this particular field
-        if self.widget == "":
+        if not self.widget:
             widget = field.widget
         else:
             widget_class = dict(settings.FORMULATOR_WIDGETS)[self.widget]
@@ -188,20 +167,19 @@ class Field(models.Model):
             widget = getattr(module, class_name)
 
         # If label is left blank, create from field name
-        if self.label == "":
+        if not self.label:
             label = self.name.title()
         else:
             label = self.label
 
         if attrs is None:
             attrs = { "required": self.required,
-                      "widget": widget,
+                      "widget": widget(attrs=self.attrs),
                       "label": label,
                       "initial": self.initial, 
                       "help_text":self.help_text,
                       "show_hidden_initial": self.show_hidden_initial,
                     }
-        attrs = dict(self.attrs.items() + attrs.items())
 
         return field(**attrs)
 
