@@ -49,7 +49,7 @@ class Form(models.Model):
     attrs = jsonfield.JSONField()
 
     def __unicode__(self):
-        return u"formulator.Form instance: %s" % self.name
+        return "formulator.Form instance: %s" % self.name
 
     def save(self, *args, **kwargs):
         super(Form, self).save(*args, **kwargs)
@@ -179,4 +179,4 @@ class Field(models.Model):
         return field(**attrs)
 
     def __unicode__(self):
-        return u"Form instance: %s" % self.name
+        return "Form instance: %s" % self.name

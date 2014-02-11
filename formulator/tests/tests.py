@@ -27,24 +27,24 @@ REQUIRE_EXTRA_PARAMS = [
 class RegistrationForm(forms.Form):
 
     honeypot = forms.CharField(required=False, widget=forms.HiddenInput)
-    firstname = forms.CharField(label=_(u'Your first name?'))
-    lastname = forms.CharField(label=_(u'Your last name:'))
+    firstname = forms.CharField(label=_('Your first name?'))
+    lastname = forms.CharField(label=_('Your last name:'))
     username = forms.CharField(widget=forms.TextInput(attrs={'max_length':30, 'placeholder': 'username here'}))
     password = forms.CharField(
         widget=forms.PasswordInput,
-        help_text=_(u'Make sure to use a secure password.'),
+        help_text=_('Make sure to use a secure password.'),
     )
-    password2 = forms.CharField(label=_(u'Retype password'), widget=forms.PasswordInput)
+    password2 = forms.CharField(label=_('Retype password'), widget=forms.PasswordInput)
     age = forms.IntegerField(required=False)
 
     def clean_honeypot(self):
         if self.cleaned_data.get('honeypot'):
-            raise ValidationError(u'Haha, you trapped into the honeypot.')
+            raise ValidationError('Haha, you trapped into the honeypot.')
         return self.cleaned_data['honeypot']
 
     def clean(self):
         if self.errors:
-            raise ValidationError(u'Please correct the errors below.')
+            raise ValidationError('Please correct the errors below.')
 
 class CreateEmptyFormTest(TestCase):
 
@@ -116,7 +116,7 @@ class CreateFormFields(TestCase):
 
         # A generator providing the fields in the form
         #import ipdb; ipdb.set_trace()
-        self.field_getter = self.form_class.base_fields.itervalues()
+        self.field_getter = iter(self.form_class.base_fields.values())
 
 
     def test_form_with_default_fields(self):
@@ -193,12 +193,12 @@ class CreateRegistrationForm(TestCase):
         )
         Field.objects.create(   name="firstname",
                                 field="CharField",
-                                label=_(u'Your first name?'),
+                                label=_('Your first name?'),
                                 formset=fieldset
         )
         Field.objects.create(   name="lastname",
                                 field="CharField",
-                                label=_(u'Your last name:'),
+                                label=_('Your last name:'),
                                 formset=fieldset
         )
         Field.objects.create(   name="username",
@@ -209,12 +209,12 @@ class CreateRegistrationForm(TestCase):
         Field.objects.create(   name="password",
                                 field="CharField",
                                 widget='PasswordInput',
-                                help_text=_(u'Make sure to use a secure password.'),
+                                help_text=_('Make sure to use a secure password.'),
                                 formset=fieldset
         )
         Field.objects.create(   name="password2",
                                 field="CharField",
-                                label=_(u'Retype password'),
+                                label=_('Retype password'),
                                 widget='PasswordInput',
                                 formset=fieldset
         )
