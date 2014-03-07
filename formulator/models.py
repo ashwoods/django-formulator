@@ -106,6 +106,8 @@ class FieldSet(models.Model):
     def fields(self):
         return self.field_set.all()
 
+    def __unicode__(self):
+        return "Fieldset %s with legend '%s' in form %s" % (self.name, self.legend, self.form.name)
 
 class Field(models.Model):
     """
