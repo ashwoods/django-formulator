@@ -46,7 +46,7 @@ class Form(models.Model):
 
 
     # json field for global and event attributes, including class, id, etc...
-    attrs = jsonfield.JSONField()
+    attrs = jsonfield.JSONField(blank=True)
 
     def __unicode__(self):
         return "formulator.Form instance: %s" % self.name
@@ -59,6 +59,7 @@ class Form(models.Model):
         return self.fieldset_set.all()
 
     def form_class_factory(self, form_class=forms.Form):
+        
         # again make sure that we have everything we need to create a class
         self.full_clean()
 
