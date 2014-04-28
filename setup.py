@@ -37,6 +37,5 @@ setup(
     ],
     long_description=read_file('README.rst'),
     test_suite="runtests.runtests",
-    use_2to3=True,
     zip_safe=False,
 )
