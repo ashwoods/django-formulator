@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import importlib
 
 from django.utils.translation import ugettext as _
@@ -48,7 +49,8 @@ class Form(models.Model):
     # json field for global and event attributes, including class, id, etc...
     attrs = jsonfield.JSONField(blank=True)
 
-    def __unicode__(self):
+    @python_2_unicode_compatible
+    def __str__(self):
         return "formulator.Form instance: %s" % self.name
 
     def save(self, *args, **kwargs):
@@ -107,7 +109,9 @@ class FieldSet(models.Model):
     def fields(self):
         return self.field_set.all()
 
-    def __unicode__(self):
+    
+    @python_2_unicode_compatible
+    def __str__(self):
         return "Fieldset %s with legend '%s' in form %s" % (self.name, self.legend, self.form.name)
 
 class Field(models.Model):
@@ -181,5 +185,6 @@ class Field(models.Model):
 
         return field(**attrs)
 
-    def __unicode__(self):
+    @python_2_unicode_compatible
+    def __str__(self):
         return "Form instance: %s" % self.name
