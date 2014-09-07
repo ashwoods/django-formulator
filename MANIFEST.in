@@ -2,5 +2,3 @@ include AUTHORS
 include LICENSE
 include README.rst
 include requirements.txt
-recursive-include formulator/static *
-recursive-include formulator/templates *

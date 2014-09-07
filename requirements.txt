@@ -2,8 +2,8 @@ Django==1.6.1
 django-appconf==0.6
 django-floppyforms==1.1.1
 django-crispy-forms==1.4.0
-django-model-utils==2.0
+django-model-utils==2.0.3
 django-positions==0.5.1
 six==1.5.2
-django-jsonfield==0.9.12
+jsonfield==0.9.20
 django-autoslug==1.7.2
