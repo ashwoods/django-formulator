@@ -8,6 +8,10 @@
 .coverage
 .tox
 .idea
-*.egg-info/*
 docs/_build/*
 dist/*
+*.egg-info
+*.swp
+dist
+build
+doc/index.html
