@@ -1,41 +1,31 @@
-import os
 from setuptools import setup, find_packages
+import re
+import os
+import sys
 
-def read_file(filename):
-    """Read a file into a string"""
-    path = os.path.abspath(os.path.dirname(__file__))
-    filepath = os.path.join(path, filename)
-    try:
-        return open(filepath).read()
-    except IOError:
-        return ''
+from formulator import get_version
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
 
-setup(
-    name='django-formulator',
-    version=__import__('formulator').__version__,
-    author='Ashley Camba Garrido',
-    author_email='ashwoods@gmail.com',
-    packages=find_packages(),
-    include_package_data=True,
-    install_requires=required,
-    #tests_require=['coverage', 'flake8'],
-    url='',
-    license='BSD License',
-    description=' '.join(__import__('formulator').__doc__.splitlines()).strip(),
-    classifiers=[
-        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Intended Audience :: Developers',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Framework :: Django',
-        'Development Status :: 4 - Beta',
-        'Operating System :: OS Independent',
-    ],
-    long_description=read_file('README.rst'),
-    test_suite="runtests.runtests",
-    zip_safe=False,
-)
+def get_packages(package):
+    """
+    Return root package and all sub-packages.
+    """
+    return [dirpath
+            for dirpath, dirnames, filenames in os.walk(package)
+            if os.path.exists(os.path.join(dirpath, '__init__.py'))]
+
+
+def get_package_data(package):
+    """
+    Return all files under the root package, that are not in a
+    package themselves.
+    """
+    walk = [(dirpath.replace(package + os.sep, '', 1), filenames)
+            for dirpath, dirnames, filenames in os.walk(package)
+            if not os.path.exists(os.path.join(dirpath, '__init__.py'))]
+
+    filepaths = []
+    for base, filenames in walk:
+        filepaths.extend([os.path.join(base, filename)
+                          for filename in filenames])
+    return {package: filepaths}
