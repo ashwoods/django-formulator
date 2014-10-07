@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"<Include a description of your project>"
-
-
-VERSION = (0, 0, 0, 'dev')
-
+VERSION = (0, 2, 0, 'dev')
 __version__ = '.'.join((str(each) for each in VERSION[:4]))
 
 

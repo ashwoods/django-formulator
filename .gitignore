@@ -29,9 +29,11 @@ nosetests.xml
 # Pycharm
 .idea
 
-# Vim
-
-*~
+docs/_build/*
+dist/*
+*.egg-info
 *.swp
 *.swo
-
+dist
+build
+doc/index.html
