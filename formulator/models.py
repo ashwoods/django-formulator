@@ -193,7 +193,7 @@ class Field(models.Model):
                 "widget": widget(attrs=self.attrs),
                 "label": label,
                 "initial": self.initial,
-                "help_text":self.help_text,
+                "help_text": self.help_text,
                 "show_hidden_initial": self.show_hidden_initial,
             }
 
