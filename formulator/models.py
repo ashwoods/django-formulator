@@ -9,6 +9,7 @@ from collections import OrderedDict
 from django.db import models
 from model_utils import Choices
 from autoslug import AutoSlugField
+from autoslug.settings import slugify as default_slugify
 from positions import PositionField
 from crispy_forms.helper import FormHelper
 from crispy_forms import layout
@@ -18,6 +19,11 @@ import floppyforms as forms
 from django_hstore import hstore
 
 from formulator.conf import settings
+
+# Autoslugify modification to obtain slugs like valid variable names 
+def variable_slugify(value):
+    return default_slugify(value).replace('-', '_')
+
 
 @python_2_unicode_compatible
 class Form(models.Model):
@@ -41,7 +47,7 @@ class Form(models.Model):
     form_name = models.CharField(max_length=100, blank=True)
     form_action = models.CharField(max_length=250, blank=True)
     form_method = models.IntegerField(max_length=10, choices=METHODS, default=METHODS.get)
-    form_id = AutoSlugField(populate_from='name', unique=True) 
+    form_id = AutoSlugField(populate_from='name', unique=True, slugify=variable_slugify) 
     form_class = models.CharField(max_length=250, blank=True)
 
     # secondary attributes
@@ -83,7 +89,12 @@ class Form(models.Model):
             layouts.append(fieldset_layout)
 
             for field in fieldset_fields:
-                attrs[field.name] = field.formfield_instance_factory()
+                if field.repeat_min > 1:
+                    for i in range(0, field.repeat_min):
+                        field_name = field.field_id + '_' + str(i) 
+                        attrs[field_name] = field.formfield_instance_factory()
+                else:
+                    attrs[field.field_id] = field.formfield_instance_factory()
 
         helper = FormHelper()
 
@@ -131,7 +142,7 @@ class Field(models.Model):
 
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
     attrs = hstore.DictionaryField(blank=True, null=True)
-    slug = AutoSlugField(unique=True, populate_from='name')
+    field_id = AutoSlugField(unique=True, populate_from='name', slugify=variable_slugify)
 
     required = models.BooleanField(default=True,
                                    help_text=_('Boolean that specifies whether the field is required.'))
@@ -157,6 +168,13 @@ class Field(models.Model):
     show_hidden_initial = models.BooleanField(
         default=False,
         help_text=_('Boolean that specifies whether the field is hidden.'))
+
+    repeat_min = models.IntegerField(default=1,
+                                     help_text=_("The minimum number of times this Field should appear in the Form"))
+
+    repeat_max = models.IntegerField(blank=True,
+                                     null=True,
+                                     help_text=_("The maximum number of times this Field should appear in the Form"))
 
     def __str__(self):
         return "Field instance: %s" % self.name

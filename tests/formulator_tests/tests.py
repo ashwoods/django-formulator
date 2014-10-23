@@ -72,6 +72,7 @@ class CreateFormFields(TestCase):
                             legend='This is a legend')
         fieldset.save()
 
+        # A bunch of formulator fields, of all the FIELDS types
         for field_type in FIELDS:
             field_class = field_type[1]
             field_name = field_type[0]
@@ -91,7 +92,6 @@ class CreateFormFields(TestCase):
         self.form_class = form_class.form_class_factory()
 
         # A generator providing the fields in the form
-        #import ipdb; ipdb.set_trace()
         self.field_getter = iter(self.form_class.base_fields.values())
 
     def test_form_with_default_fields(self):
@@ -142,6 +142,40 @@ class CreateFormFields(TestCase):
         """
         for field in self.field_getter:        
             self.assertTrue(field.label in str(field.__class__))
+
+
+class RepeatFields(TestCase):
+
+    def setUp(self):
+        """
+        Set up: creates and saves models for form instance creation
+        """
+        form_class = Form(name='Form')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        # And a formulator field that will yield several form fields via the
+        # repeat_min attribute
+        rep_field_name = 'Repeated Field',
+        self.rep_times = 5
+
+        Field.objects.create(formset=fieldset,
+                             name=rep_field_name,
+                             field='CharField',
+                             repeat_min=self.rep_times,
+        )
+
+        self.form_class = form_class.form_class_factory()
+
+    def test_repeat_min(self):
+        """
+        Test that number of fields yielded is the one expected
+        """
+        self.assertTrue(len(self.form_class.base_fields) == self.rep_times)
 
 
 class CreateRegistrationForm(TestCase):
