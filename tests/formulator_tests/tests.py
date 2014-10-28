@@ -160,13 +160,15 @@ class RepeatFields(TestCase):
 
         # And a formulator field that will yield several form fields via the
         # repeat_min attribute
-        rep_field_name = 'Repeated Field',
-        self.rep_times = 5
+        self.field_name = 'foo'
+        self.rep_min = 2
+        self.rep_max = 5
 
         Field.objects.create(formset=fieldset,
-                             name=rep_field_name,
+                             name=self.field_name,
                              field='CharField',
-                             repeat_min=self.rep_times,
+                             repeat_min=self.rep_min,
+                             repeat_max=self.rep_max,
         )
 
         self.form_class = form_class.form_class_factory()
@@ -175,7 +177,19 @@ class RepeatFields(TestCase):
         """
         Test that number of fields yielded is the one expected
         """
-        self.assertTrue(len(self.form_class.base_fields) == self.rep_times)
+        self.assertTrue(len(self.form_class.base_fields) == self.rep_min)
+
+    def test_repeat_max(self):
+        data_in_range = dict([(self.field_name + '_' + str(sub),'foo') for sub in range(0, self.rep_max)])
+        data_too_many = dict([(self.field_name + '_' + str(sub),'foo') for sub in range(0, self.rep_max + 3)])
+
+        # If the data is in range, the number of fields should be the same as in data
+        f = self.form_class(data_in_range)
+        self.assertEquals(len(f.fields), len(f.data))
+
+        # If the data is too many, the number of fields should be the same as maximum repetitions
+        f = self.form_class(data_too_many)
+        self.assertEquals(len(f.fields), self.rep_max)
 
 
 class CreateRegistrationForm(TestCase):

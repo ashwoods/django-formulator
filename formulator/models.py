@@ -1,13 +1,14 @@
-
 from __future__ import unicode_literals
-from django.utils.encoding import python_2_unicode_compatible
+
+import re
 import importlib
 
 from django.utils.translation import ugettext as _
-from collections import OrderedDict
-
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
+
 from model_utils import Choices
+from collections import OrderedDict, Counter
 from autoslug import AutoSlugField
 from autoslug.settings import slugify as default_slugify
 from positions import PositionField
@@ -57,7 +58,6 @@ class Form(models.Model):
     form_enctype = models.IntegerField(choices=ENCTYPES, default=ENCTYPES.urlencoded)
     form_target = models.CharField(max_length=50, blank=True)
 
-
     # json field for global and event attributes
     attrs = hstore.DictionaryField(null=True, blank=True)
 
@@ -78,10 +78,13 @@ class Form(models.Model):
         # again make sure that we have everything we need to create a class
         self.full_clean()
 
-        attrs = {}
-        #fields = OrderedDict()
-        layouts = []
+        helper = FormHelper()
 
+        attrs = {}
+        layouts = []
+        
+        # Checks for the existance of fields with repeat_min and/or repeat_max 
+        # attributes.
         for fieldset in self.fieldsets:
             fieldset_fields = fieldset.fields
 
@@ -89,14 +92,14 @@ class Form(models.Model):
             layouts.append(fieldset_layout)
 
             for field in fieldset_fields:
+                if field.repeat_max:
+                    attrs[field.field_id + '_repeat_max'] = field.repeat_max
                 if field.repeat_min > 1:
                     for i in range(0, field.repeat_min):
                         field_name = field.field_id + '_' + str(i) 
                         attrs[field_name] = field.formfield_instance_factory()
                 else:
                     attrs[field.field_id] = field.formfield_instance_factory()
-
-        helper = FormHelper()
 
         helper.form_id = self.form_id
         helper.form_action = self.form_action
@@ -108,10 +111,39 @@ class Form(models.Model):
             'enctype': self.form_enctype,
             'target': self.form_target
         }
+
         helper.layout = layout.Layout(*layouts)
 
+        class MyForm(form_class):
+            
+            def __init__(self, *args, **kwargs):
+                super(MyForm, self).__init__(*args, **kwargs)
+                # Counter object with repeating field names, those matching the
+                # regular expresion, and the times they occur in data.
+                rep_fields = Counter([re.split('_\d+$', f)[0] for f in self.data.keys()])
+
+                for f in rep_fields.keys():
+                    rep_var = f + '_repeat_max'
+
+                    if hasattr(self, rep_var):
+                        maximum = getattr(self, rep_var)
+                        provided = rep_fields.get(f)
+                        # Counter object with existing field names and the times they occur
+                        ex_fields = Counter([re.split('_\d+$', f)[0] for f in self.fields.keys()])
+
+                        if provided > maximum:
+                            # Create fields up to maximum 
+                            for sub in range(ex_fields[f], maximum):
+                                self.fields[f + '_' + str(sub)] = Field.objects.get(field_id=f).formfield_instance_factory()
+                        else: 
+                            # Create fields up to provided
+                            for sub in range(ex_fields[f], provided):
+                                self.fields[f + '_' + str(sub)] = Field.objects.get(field_id=f).formfield_instance_factory()
+
         attrs['helper'] = helper
-        return type(str(self.form_id), (form_class,), attrs)
+
+        return type(str(self.form_id), (MyForm,), attrs)
+        #return type(str(self.form_id), (form_class,), attrs)
 
 
 @python_2_unicode_compatible
