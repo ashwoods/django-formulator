@@ -29,3 +29,14 @@ def get_package_data(package):
         filepaths.extend([os.path.join(base, filename)
                           for filename in filenames])
     return {package: filepaths}
+
+setup(
+    name='django-formulator',
+    version=get_version(),
+    description='Core library for the formulator service',
+    author='Ashley Camba Garrido',
+    url='https://github.com/ashwoods/django-formulator',
+    packages=get_packages('formulator'),
+    package_data=get_package_data('formulator'),
+    license='MIT')
+
