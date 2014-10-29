@@ -1,17 +1,39 @@
-*.py[co]
-.project
-.pydevproject
+*.lock
+librarian_roles
+tmp
+.vagrant
 *~
-*.db
-*.orig
-*.DS_Store
+# build
+*.egg-info/
+xbuild/
+dist/
+
+# Basics
+*.py[cod]
+*.pyc
+__pycache__
+
+# Logs
+*.log
+pip-log.txt
+
+# Unit test / coverage reports
 .coverage
 .tox
+nosetests.xml
+
+# Translations
+*.mo
+*.pot
+
+# Pycharm
 .idea
+
 docs/_build/*
 dist/*
 *.egg-info
 *.swp
+*.swo
 dist
 build
 doc/index.html

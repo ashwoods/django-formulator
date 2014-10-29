@@ -72,6 +72,7 @@ class CreateFormFields(TestCase):
                             legend='This is a legend')
         fieldset.save()
 
+        # A bunch of formulator fields, of all the FIELDS types
         for field_type in FIELDS:
             field_class = field_type[1]
             field_name = field_type[0]
@@ -91,7 +92,6 @@ class CreateFormFields(TestCase):
         self.form_class = form_class.form_class_factory()
 
         # A generator providing the fields in the form
-        #import ipdb; ipdb.set_trace()
         self.field_getter = iter(self.form_class.base_fields.values())
 
     def test_form_with_default_fields(self):
@@ -142,6 +142,54 @@ class CreateFormFields(TestCase):
         """
         for field in self.field_getter:        
             self.assertTrue(field.label in str(field.__class__))
+
+
+class RepeatFields(TestCase):
+
+    def setUp(self):
+        """
+        Set up: creates and saves models for form instance creation
+        """
+        form_class = Form(name='Form')
+        form_class.save()
+
+        fieldset = FieldSet(form=form_class,
+                            name='fieldset_1',
+                            legend='This is a legend')
+        fieldset.save()
+
+        # And a formulator field that will yield several form fields via the
+        # repeat_min attribute
+        self.field_name = 'foo'
+        self.rep_min = 2
+        self.rep_max = 5
+
+        Field.objects.create(formset=fieldset,
+                             name=self.field_name,
+                             field='CharField',
+                             repeat_min=self.rep_min,
+                             repeat_max=self.rep_max,
+        )
+
+        self.form_class = form_class.form_class_factory()
+
+    def test_repeat_min(self):
+        """
+        Test that number of fields yielded is the one expected
+        """
+        self.assertTrue(len(self.form_class.base_fields) == self.rep_min)
+
+    def test_repeat_max(self):
+        data_in_range = dict([(self.field_name + '_' + str(sub),'foo') for sub in range(0, self.rep_max)])
+        data_too_many = dict([(self.field_name + '_' + str(sub),'foo') for sub in range(0, self.rep_max + 3)])
+
+        # If the data is in range, the number of fields should be the same as in data
+        f = self.form_class(data_in_range)
+        self.assertEquals(len(f.fields), len(f.data))
+
+        # If the data is too many, the number of fields should be the same as maximum repetitions
+        f = self.form_class(data_too_many)
+        self.assertEquals(len(f.fields), self.rep_max)
 
 
 class CreateRegistrationForm(TestCase):
