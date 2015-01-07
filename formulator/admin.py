@@ -1,9 +1,11 @@
 from django.contrib import admin
 from .models import Form, FieldSet, Field
 
+
 class FieldInline(admin.StackedInline):
     model = Field
-    extra = 1
+    extra = 0
+
 
 class FieldSetAdmin(admin.ModelAdmin):
     inlines = [FieldInline]
