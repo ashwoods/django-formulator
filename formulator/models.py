@@ -174,6 +174,7 @@ class Field(models.Model):
 
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
     attrs = hstore.DictionaryField(blank=True, null=True)
+    choices = hstore.DictionaryField(blank=True, null=True)
     field_id = AutoSlugField(unique=True, populate_from='name', slugify=variable_slugify)
 
     required = models.BooleanField(default=True,
@@ -218,10 +219,12 @@ class Field(models.Model):
         if field_class is None:
             field_class = dict(settings.FORMULATOR_FIELDS)[self.field]
 
+
         module_name, class_name = field_class.rsplit(".", 1)
         module = importlib.import_module(module_name)
         field = getattr(module, class_name)
-        
+
+
         # Get the widget class for this particular field
         if not self.widget:
             widget = field.widget
@@ -247,6 +250,8 @@ class Field(models.Model):
                 "show_hidden_initial": self.show_hidden_initial,
             }
 
+        if self.choices:
+            attrs['choices'] = [(key, _(value)) for key, value in self.choices.iteritems()]
         return field(**attrs)
 
     class Meta:
