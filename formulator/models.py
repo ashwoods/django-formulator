@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import re
 import importlib
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
@@ -20,6 +20,7 @@ import floppyforms as forms
 from django_hstore import hstore
 
 from formulator.conf import settings
+
 
 # Autoslugify modification to obtain slugs like valid variable names 
 def variable_slugify(value):
@@ -47,7 +48,7 @@ class Form(models.Model):
     # common form attributes
     form_name = models.CharField(max_length=100, blank=True)
     form_action = models.CharField(max_length=250, blank=True)
-    form_method = models.IntegerField(max_length=10, choices=METHODS, default=METHODS.get)
+    form_method = models.IntegerField(max_length=10, choices=METHODS, default=METHODS.post)
     form_id = AutoSlugField(populate_from='name', unique=True, slugify=variable_slugify) 
     form_class = models.CharField(max_length=250, blank=True)
 
@@ -88,7 +89,7 @@ class Form(models.Model):
         for fieldset in self.fieldsets:
             fieldset_fields = fieldset.fields
 
-            fieldset_layout = layout.Fieldset(fieldset.legend, *[f.name for f in fieldset_fields])
+            fieldset_layout = layout.Fieldset(fieldset.legend, *[f.field_id for f in fieldset_fields])
             layouts.append(fieldset_layout)
 
             for field in fieldset_fields:
@@ -168,14 +169,21 @@ class Field(models.Model):
 
     """
 
-    formset = models.ForeignKey(FieldSet)
-    name = models.CharField(max_length=100, )
+    fieldset = models.ForeignKey(FieldSet)
+    label = models.CharField(max_length=200,
+                             help_text=_("""A verbose name for this field, for use in displaying this
+                                            field in a form. By default, Django will use a "pretty"
+                                            version of the form field name, if the Field is part of a
+                                            Form. """))
+
+    field_id = AutoSlugField(unique_with='fieldset__form', populate_from='label', slugify=variable_slugify)
     position = PositionField(collection='formset')
 
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
+    maxlength = models.IntegerField(blank=True, null=True)
+
     attrs = hstore.DictionaryField(blank=True, null=True)
     choices = hstore.DictionaryField(blank=True, null=True)
-    field_id = AutoSlugField(unique=True, populate_from='name', slugify=variable_slugify)
 
     required = models.BooleanField(default=True,
                                    help_text=_('Boolean that specifies whether the field is required.'))
@@ -185,11 +193,7 @@ class Field(models.Model):
                                            default Widget that it'll use if you don't specify this. In
                                            most cases, the default widget is TextInput."""))
 
-    label = models.CharField(max_length=100, blank=True,
-                             help_text=_("""A verbose name for this field, for use in displaying this
-                                            field in a form. By default, Django will use a "pretty"
-                                            version of the form field name, if the Field is part of a
-                                            Form. """))
+
 
     initial = models.CharField(max_length=200, blank=True,
                                help_text=_("""A value to use in this Field's initial display. This value
@@ -210,7 +214,7 @@ class Field(models.Model):
                                      help_text=_("The maximum number of times this Field should appear in the Form"))
 
     def __str__(self):
-        return "Field instance: %s" % self.name
+        return "Field instance: %s" % self.label
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
         """Returns an instance of a form field"""
@@ -240,19 +244,27 @@ class Field(models.Model):
         else:
             label = self.label
 
+        help_text = _(self.help_text) if self.help_text else ""
+
+
         if attrs is None:
             attrs = {
                 "required": self.required,
                 "widget": widget(attrs=self.attrs),
                 "label": _(label),
                 "initial": self.initial,
-                "help_text": _(self.help_text),
+                "help_text": help_text,
                 "show_hidden_initial": self.show_hidden_initial,
             }
 
         if self.choices:
             attrs['choices'] = [(key, _(value)) for key, value in self.choices.iteritems()]
+
+        if self.maxlength:
+            attrs['max_length'] = self.maxlength
+
         return field(**attrs)
+
 
     class Meta:
         ordering = ['position']
