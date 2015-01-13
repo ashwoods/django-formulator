@@ -14,7 +14,7 @@ from autoslug.settings import slugify as default_slugify
 from positions import PositionField
 from crispy_forms.helper import FormHelper
 from crispy_forms import layout
-
+from hvad.models import TranslatableModel, TranslatedFields
 
 import floppyforms as forms
 from django_hstore import hstore
@@ -26,6 +26,9 @@ from formulator.conf import settings
 def variable_slugify(value):
     return default_slugify(value).replace('-', '_')
 
+
+def create_field_slug(instance):
+    return variable_slugify("%s %s" % (instance.fieldset.slug, instance.name))
 
 @python_2_unicode_compatible
 class Form(models.Model):
@@ -148,59 +151,50 @@ class Form(models.Model):
 
 
 @python_2_unicode_compatible
-class FieldSet(models.Model):
+class FieldSet(TranslatableModel):
     form = models.ForeignKey(Form)
     position = PositionField(collection='form')
     name = models.CharField(max_length=100)
-    legend = models.CharField(max_length=100)
+    slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
+
+    translations = TranslatedFields(
+        legend = models.CharField(max_length=200),
+    )
 
     @property
     def fields(self):
         return self.field_set.all()
 
     def __str__(self):
-        return "FieldSet %s with legend '%s' in form %s" % (self.name, self.legend, self.form.name)
+        return "FieldSet: %s %s" % (self.name, self.form.name)
 
 
 @python_2_unicode_compatible
-class Field(models.Model):
+class Field(TranslatableModel):
     """
     Stores the information for a django form field.
 
     """
 
     fieldset = models.ForeignKey(FieldSet)
-    label = models.CharField(max_length=200,
-                             help_text=_("""A verbose name for this field, for use in displaying this
-                                            field in a form. By default, Django will use a "pretty"
-                                            version of the form field name, if the Field is part of a
-                                            Form. """))
+    name = models.CharField(max_length=200,
+                             help_text=_("""A short name to build the database field """))
 
-    field_id = AutoSlugField(unique_with='fieldset__form', populate_from='label', slugify=variable_slugify)
-    position = PositionField(collection='formset')
+    field_id = AutoSlugField(unique_with='fieldset__form', populate_from=create_field_slug, slugify=variable_slugify)
+    position = PositionField(collection='fieldset')
 
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
+
     maxlength = models.IntegerField(blank=True, null=True)
-
     attrs = hstore.DictionaryField(blank=True, null=True)
-    choices = hstore.DictionaryField(blank=True, null=True)
 
-    required = models.BooleanField(default=True,
-                                   help_text=_('Boolean that specifies whether the field is required.'))
+
+    required = models.BooleanField(default=True,)
     widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
                               help_text=_("""A Widget class, or instance of a Widget class, that should
                                            be used for this Field when displaying it. Each Field has a
                                            default Widget that it'll use if you don't specify this. In
                                            most cases, the default widget is TextInput."""))
-
-
-
-    initial = models.CharField(max_length=200, blank=True,
-                               help_text=_("""A value to use in this Field's initial display. This value
-                                              is *not* used as a fallback if data isn't given. """))
-
-    help_text = models.TextField(blank=True,
-                                 help_text=_("An optional string to use as 'help text' for this Field."))
 
     show_hidden_initial = models.BooleanField(
         default=False,
@@ -213,8 +207,26 @@ class Field(models.Model):
                                      null=True,
                                      help_text=_("The maximum number of times this Field should appear in the Form"))
 
+    translations = TranslatedFields(
+        label = models.CharField(max_length=200,
+                             help_text=_("""A verbose name for this field, for use in displaying this
+                                            field in a form. By default, Django will use a "pretty"
+                                            version of the form field name, if the Field is part of a
+                                            Form. """)),
+        help_text = models.TextField(blank=True,
+                                 help_text=_("An optional string to use as 'help text' for this Field.")),
+
+        initial = models.CharField(max_length=200, blank=True,
+                               help_text=_("""A value to use in this Field's initial display. This value
+                                              is *not* used as a fallback if data isn't given. """)),
+
+        choices = hstore.DictionaryField(blank=True, null=True),
+
+    )
+
+
     def __str__(self):
-        return "Field instance: %s" % self.label
+        return "Field: %s" % self.name
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
         """Returns an instance of a form field"""
@@ -244,16 +256,13 @@ class Field(models.Model):
         else:
             label = self.label
 
-        help_text = _(self.help_text) if self.help_text else ""
-
-
         if attrs is None:
             attrs = {
                 "required": self.required,
                 "widget": widget(attrs=self.attrs),
-                "label": _(label),
+                "label": label,
                 "initial": self.initial,
-                "help_text": help_text,
+                "help_text": self.help_text,
                 "show_hidden_initial": self.show_hidden_initial,
             }
 
@@ -264,7 +273,6 @@ class Field(models.Model):
             attrs['max_length'] = self.maxlength
 
         return field(**attrs)
-
 
     class Meta:
         ordering = ['position']
