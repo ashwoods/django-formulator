@@ -161,6 +161,9 @@ class FieldSet(TranslatableModel):
         legend = models.CharField(max_length=200),
     )
 
+    class Meta:
+        ordering = ['position']
+
     @property
     def fields(self):
         return self.field_set.all()
@@ -223,6 +226,9 @@ class Field(TranslatableModel):
         choices = hstore.DictionaryField(blank=True, null=True),
 
     )
+
+    class Meta:
+        ordering = ['position']
 
 
     def __str__(self):
