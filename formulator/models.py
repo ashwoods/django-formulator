@@ -273,7 +273,9 @@ class Field(TranslatableModel):
             }
 
         if self.choices:
-            attrs['choices'] = [(key, _(value)) for key, value in self.choices.iteritems()]
+            choices = [(key, _(value)) for key, value in self.choices.iteritems()]
+            choices.reverse()
+            attrs['choices'] = choices
 
         if self.maxlength:
             attrs['max_length'] = self.maxlength
@@ -282,3 +284,5 @@ class Field(TranslatableModel):
 
     class Meta:
         ordering = ['position']
+
+
