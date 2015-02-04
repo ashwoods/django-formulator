@@ -30,6 +30,7 @@ def variable_slugify(value):
 def create_field_slug(instance):
     return variable_slugify("%s %s" % (instance.fieldset.slug, instance.name))
 
+
 @python_2_unicode_compatible
 class Form(models.Model):
     """
@@ -37,7 +38,6 @@ class Form(models.Model):
     a floppy form Form class. It uses crispyforms helpers to add the additional form properties that django forms don't
     handle out of the box. It also uses crispyform fieldsets per default.
     """
-
     ENCTYPES = Choices((0, 'urlencoded', 'application/x-www-form-urlencoded'),
                        (1, 'multipart', 'multipart/form-data'),
                        (2, 'plain', 'text/plain'))
@@ -92,7 +92,7 @@ class Form(models.Model):
         for fieldset in self.fieldsets:
             fieldset_fields = fieldset.fields
 
-            fieldset_layout = layout.Fieldset(fieldset.legend, *[f.field_id for f in fieldset_fields])
+            fieldset_layout = layout.Fieldset(fieldset.safe_legend, *[f.field_id for f in fieldset_fields])
             layouts.append(fieldset_layout)
 
             for field in fieldset_fields:
@@ -146,7 +146,9 @@ class Form(models.Model):
 
         attrs['helper'] = helper
 
-        return type(str(self.form_id), (MyForm,), attrs)
+        cls = type(str(self.form_id), (MyForm,), attrs)
+        cls.__module__, cls.__name__ = (str('formualtor'), str('Formulator'))
+        return cls
         #return type(str(self.form_id), (form_class,), attrs)
 
 
@@ -157,8 +159,18 @@ class FieldSet(TranslatableModel):
     name = models.CharField(max_length=100)
     slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
 
+    @property
+    def safe_legend(self):
+        try:
+            return self.legend
+        except:
+            return self.name.title()
+
+
+
+
     translations = TranslatedFields(
-        legend = models.CharField(max_length=200),
+        legend=models.CharField(max_length=200),
     )
 
     class Meta:
@@ -181,7 +193,7 @@ class Field(TranslatableModel):
 
     fieldset = models.ForeignKey(FieldSet)
     name = models.CharField(max_length=200,
-                             help_text=_("""A short name to build the database field """))
+                            help_text=_("""A short name to build the database field """))
 
     field_id = AutoSlugField(unique_with='fieldset__form', populate_from=create_field_slug, slugify=variable_slugify)
     position = PositionField(collection='fieldset')
@@ -190,7 +202,6 @@ class Field(TranslatableModel):
 
     maxlength = models.IntegerField(blank=True, null=True)
     attrs = hstore.DictionaryField(blank=True, null=True)
-
 
     required = models.BooleanField(default=True,)
     widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
@@ -211,25 +222,46 @@ class Field(TranslatableModel):
                                      help_text=_("The maximum number of times this Field should appear in the Form"))
 
     translations = TranslatedFields(
-        label = models.CharField(max_length=200,
-                             help_text=_("""A verbose name for this field, for use in displaying this
+        label=models.CharField(max_length=200,
+                               help_text=_("""A verbose name for this field, for use in displaying this
                                             field in a form. By default, Django will use a "pretty"
                                             version of the form field name, if the Field is part of a
                                             Form. """)),
-        help_text = models.TextField(blank=True,
-                                 help_text=_("An optional string to use as 'help text' for this Field.")),
+        help_text=models.TextField(blank=True,
+                                   help_text=_("An optional string to use as 'help text' for this Field.")),
 
-        initial = models.CharField(max_length=200, blank=True,
-                               help_text=_("""A value to use in this Field's initial display. This value
+        initial=models.CharField(max_length=200, blank=True,
+                                 help_text=_("""A value to use in this Field's initial display. This value
                                               is *not* used as a fallback if data isn't given. """)),
 
-        choices = hstore.DictionaryField(blank=True, null=True),
+        choices=hstore.DictionaryField(blank=True, null=True),
 
     )
 
+    @property
+    def safe_label(self):
+        try:
+            return self.label
+        except:
+            return self.name.title()
+
+    @property
+    def safe_initial(self):
+        try:
+            return self.initial
+        except:
+            return ''
+
+    @property
+    def safe_help_text(self):
+        try:
+            return self.help_text
+        except:
+            return ''
+
+
     class Meta:
         ordering = ['position']
-
 
     def __str__(self):
         return "Field: %s" % self.name
@@ -249,31 +281,32 @@ class Field(TranslatableModel):
 
         # Get the widget class for this particular field
         if not self.widget:
-            widget = field.widget
+            widget = getattr(field, 'widget', None)
         else:
             widget_class = dict(settings.FORMULATOR_WIDGETS)[self.widget]
             module_name, class_name = widget_class.rsplit(".", 1)
             module = importlib.import_module(module_name)
             widget = getattr(module, class_name)
 
-        # If label is left blank, create from field name
-        if not self.label:
-            label = self.name.title()
-        else:
-            label = self.label
-
         if attrs is None:
             attrs = {
                 "required": self.required,
-                "widget": widget(attrs=self.attrs),
-                "label": label,
-                "initial": self.initial,
-                "help_text": self.help_text,
+                "label": self.safe_label,
+                "initial": self.safe_initial,
+                "help_text": self.safe_help_text,
                 "show_hidden_initial": self.show_hidden_initial,
             }
 
-        if self.choices:
-            choices = [(key, _(value)) for key, value in self.choices.iteritems()]
+        if widget:
+            attrs['widget'] = widget(attrs=self.attrs)
+
+        try:
+            choices = self.choices
+        except:
+            choices = None
+
+        if choices:
+            choices = [(key, _(value)) for key, value in choices.iteritems()]
             choices.reverse()
             attrs['choices'] = choices
 
