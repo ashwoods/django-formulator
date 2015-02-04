@@ -145,10 +145,7 @@ class Form(models.Model):
                                 self.fields[f + '_' + str(sub)] = Field.objects.get(field_id=f).formfield_instance_factory()
 
         attrs['helper'] = helper
-
-        cls = type(str(self.form_id), (MyForm,), attrs)
-        cls.__module__, cls.__name__ = (str('formualtor'), str('Formulator'))
-        return cls
+        return type(str(self.form_id), (MyForm,), attrs)
         #return type(str(self.form_id), (form_class,), attrs)
 
 
