@@ -38,17 +38,27 @@ class FieldInline(admin.TabularInline):
     get_change_url.allow_tags = True
 
 
-class FieldSetAdmin(TranslatableAdmin):
-    inlines = [FieldInline]
-
-
 class FormAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'name', 'form_name', 'form_action', 'form_method', 'form_id', 'form_class']
     inlines = [FieldSetInline]
 
 
-class FieldAdmin(TranslatableAdmin):
-    pass
+class FieldSetAdmin(TranslatableAdmin):
+    list_display = ['pk', 'name', 'form', 'slug', 'position']
+    inlines = [FieldInline]
 
+
+class FieldAdmin(TranslatableAdmin):
+    list_display = ['pk', 'name', 'get_form_field', 'get_fieldset_field','field_id', 'position', 'maxlength', 'required', 'field', 'widget']
+
+    def get_fieldset_field(self, obj):
+        return obj.fieldset.name
+
+    def get_form_field(self, obj):
+        return obj.fieldset.form.name
+
+    get_fieldset_field.short_description = 'Fieldset'
+    get_form_field.short_description = 'Form'
 
 admin.site.register(Form, FormAdmin)
 admin.site.register(FieldSet, FieldSetAdmin)

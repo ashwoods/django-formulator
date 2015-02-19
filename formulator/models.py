@@ -6,6 +6,7 @@ import importlib
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.functional import cached_property
 
 from model_utils import Choices
 from collections import OrderedDict, Counter
@@ -14,7 +15,7 @@ from autoslug.settings import slugify as default_slugify
 from positions import PositionField
 from crispy_forms.helper import FormHelper
 from crispy_forms import layout
-from hvad.models import TranslatableModel, TranslatedFields
+from hvad.models import TranslatableModel, TranslatedFields, TranslationManager
 
 import floppyforms as forms
 from django_hstore import hstore
@@ -73,9 +74,9 @@ class Form(models.Model):
     def save(self, *args, **kwargs):
         super(Form, self).save(*args, **kwargs)
 
-    @property
+    @cached_property
     def fieldsets(self):
-        return self.fieldset_set.all()
+        return self.fieldset_set.language().prefetch_related('field_set')
 
     def form_class_factory(self, form_class=forms.Form):
         
@@ -96,14 +97,7 @@ class Form(models.Model):
             layouts.append(fieldset_layout)
 
             for field in fieldset_fields:
-                if field.repeat_max:
-                    attrs[field.field_id + '_repeat_max'] = field.repeat_max
-                if field.repeat_min > 1:
-                    for i in range(0, field.repeat_min):
-                        field_name = field.field_id + '_' + str(i) 
-                        attrs[field_name] = field.formfield_instance_factory()
-                else:
-                    attrs[field.field_id] = field.formfield_instance_factory()
+                attrs[field.field_id] = field.formfield_instance_factory()
 
         helper.form_id = self.form_id
         helper.form_action = self.form_action
@@ -118,35 +112,8 @@ class Form(models.Model):
 
         helper.layout = layout.Layout(*layouts)
 
-        class MyForm(form_class):
-            
-            def __init__(self, *args, **kwargs):
-                super(MyForm, self).__init__(*args, **kwargs)
-                # Counter object with repeating field names, those matching the
-                # regular expresion, and the times they occur in data.
-                rep_fields = Counter([re.split('_\d+$', f)[0] for f in self.data.keys()])
-
-                for f in rep_fields.keys():
-                    rep_var = f + '_repeat_max'
-
-                    if hasattr(self, rep_var):
-                        maximum = getattr(self, rep_var)
-                        provided = rep_fields.get(f)
-                        # Counter object with existing field names and the times they occur
-                        ex_fields = Counter([re.split('_\d+$', f)[0] for f in self.fields.keys()])
-
-                        if provided > maximum:
-                            # Create fields up to maximum 
-                            for sub in range(ex_fields[f], maximum):
-                                self.fields[f + '_' + str(sub)] = Field.objects.get(field_id=f).formfield_instance_factory()
-                        else: 
-                            # Create fields up to provided
-                            for sub in range(ex_fields[f], provided):
-                                self.fields[f + '_' + str(sub)] = Field.objects.get(field_id=f).formfield_instance_factory()
-
         attrs['helper'] = helper
-        return type(str(self.form_id), (MyForm,), attrs)
-        #return type(str(self.form_id), (form_class,), attrs)
+        return type(str(self.form_id), (form_class,), attrs)
 
 
 @python_2_unicode_compatible
@@ -156,6 +123,20 @@ class FieldSet(TranslatableModel):
     name = models.CharField(max_length=100)
     slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
 
+
+    translations = TranslatedFields(
+        legend=models.CharField(max_length=200),
+    )
+
+    objects = TranslationManager()
+
+    class Meta:
+        ordering = ['form', 'position']
+
+    def __str__(self):
+        return "FieldSet: %s %s" % (self.name, self.form.name)
+
+
     @property
     def safe_legend(self):
         try:
@@ -163,22 +144,11 @@ class FieldSet(TranslatableModel):
         except:
             return self.name.title()
 
-
-
-
-    translations = TranslatedFields(
-        legend=models.CharField(max_length=200),
-    )
-
-    class Meta:
-        ordering = ['position']
-
-    @property
+    @cached_property
     def fields(self):
-        return self.field_set.all()
+        return self.field_set.language()
 
-    def __str__(self):
-        return "FieldSet: %s %s" % (self.name, self.form.name)
+
 
 
 @python_2_unicode_compatible
@@ -235,6 +205,15 @@ class Field(TranslatableModel):
 
     )
 
+    objects = TranslationManager()
+
+    class Meta:
+        order_with_respect_to = 'fieldset'
+        ordering = ['fieldset__form', 'fieldset', 'position']
+
+    def __str__(self):
+        return "Field: %s" % self.name
+
     @property
     def safe_label(self):
         try:
@@ -255,13 +234,6 @@ class Field(TranslatableModel):
             return self.help_text
         except:
             return ''
-
-
-    class Meta:
-        ordering = ['position']
-
-    def __str__(self):
-        return "Field: %s" % self.name
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
         """Returns an instance of a form field"""
@@ -313,6 +285,6 @@ class Field(TranslatableModel):
         return field(**attrs)
 
     class Meta:
-        ordering = ['position']
+        ordering = ['fieldset', 'position']
 
 
