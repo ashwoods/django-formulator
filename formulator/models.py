@@ -137,12 +137,9 @@ class FieldSet(TranslatableModel):
         return "FieldSet: %s %s" % (self.name, self.form.name)
 
 
-    @property
+    @cached_property
     def safe_legend(self):
-        try:
-            return self.legend
-        except:
-            return self.name.title()
+        return self.safe_translation_getter('legend', self.name.title())
 
     @cached_property
     def fields(self):
@@ -214,26 +211,17 @@ class Field(TranslatableModel):
     def __str__(self):
         return "Field: %s" % self.name
 
-    @property
+    @cached_property
     def safe_label(self):
-        try:
-            return self.label
-        except:
-            return self.name.title()
+        return self.safe_translation_getter('label', self.name.title())
 
-    @property
+    @cached_property
     def safe_initial(self):
-        try:
-            return self.initial
-        except:
-            return ''
+        return self.safe_translation_getter('initial', '')
 
-    @property
+    @cached_property
     def safe_help_text(self):
-        try:
-            return self.help_text
-        except:
-            return ''
+        return self.safe_translation_getter('help_text', '')
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
         """Returns an instance of a form field"""
