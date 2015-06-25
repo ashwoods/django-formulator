@@ -1,0 +1,6 @@
+[run]
+source = formulator
+branch = 1
+
+[report]
+omit = *tests*
