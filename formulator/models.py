@@ -15,7 +15,6 @@ from autoslug.settings import slugify as default_slugify
 from positions import PositionField
 from crispy_forms.helper import FormHelper
 from crispy_forms import layout
-from hvad.models import TranslatableModel, TranslatedFields, TranslationManager
 
 import floppyforms as forms
 from django_hstore import hstore
@@ -76,7 +75,7 @@ class Form(models.Model):
 
     @cached_property
     def fieldsets(self):
-        return self.fieldset_set.language().prefetch_related('field_set')
+        return self.fieldset_set.all().prefetch_related('field_set')
 
     def form_class_factory(self, form_class=forms.Form):
         
@@ -117,18 +116,12 @@ class Form(models.Model):
 
 
 @python_2_unicode_compatible
-class FieldSet(TranslatableModel):
+class FieldSet(models.Model):
     form = models.ForeignKey(Form)
     position = PositionField(collection='form')
     name = models.CharField(max_length=100)
     slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
-
-
-    translations = TranslatedFields(
-        legend=models.CharField(max_length=200),
-    )
-
-    objects = TranslationManager()
+    legend=models.CharField(max_length=200)
 
     class Meta:
         ordering = ['form', 'position']
@@ -139,35 +132,49 @@ class FieldSet(TranslatableModel):
 
     @cached_property
     def safe_legend(self):
-        return self.safe_translation_getter('legend', self.name.title())
+        try:
+            return self.legend
+        except:
+            return self.name.title()
 
     @cached_property
     def fields(self):
-        return self.field_set.language()
+        return self.field_set.all()
 
 
 
 
 @python_2_unicode_compatible
-class Field(TranslatableModel):
+class Field(models.Model):
     """
     Stores the information for a django form field.
 
     """
 
     fieldset = models.ForeignKey(FieldSet)
+    label=models.CharField(max_length=200,
+                           help_text=_("""A verbose name for this field, for use in displaying this
+                                        field in a form. By default, Django will use a "pretty"
+                                        version of the form field name, if the Field is part of a
+                                        Form. """))
+
     name = models.CharField(max_length=200,
                             help_text=_("""A short name to build the database field """))
 
     field_id = AutoSlugField(unique_with='fieldset__form', populate_from=create_field_slug, slugify=variable_slugify)
     position = PositionField(collection='fieldset')
-
     field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
-
     maxlength = models.IntegerField(blank=True, null=True)
     attrs = hstore.DictionaryField(blank=True, null=True)
+    choices=hstore.DictionaryField(blank=True, null=True)
+    required = models.BooleanField(default=True)
+    help_text=models.TextField(blank=True,
+                               help_text=_("An optional string to use as 'help text' for this Field."))
 
-    required = models.BooleanField(default=True,)
+    initial=models.CharField(max_length=200, blank=True,
+                             help_text=_("""A value to use in this Field's initial display. This value
+                                          is *not* used as a fallback if data isn't given. """))
+
     widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
                               help_text=_("""A Widget class, or instance of a Widget class, that should
                                            be used for this Field when displaying it. Each Field has a
@@ -185,25 +192,6 @@ class Field(TranslatableModel):
                                      null=True,
                                      help_text=_("The maximum number of times this Field should appear in the Form"))
 
-    translations = TranslatedFields(
-        label=models.CharField(max_length=200,
-                               help_text=_("""A verbose name for this field, for use in displaying this
-                                            field in a form. By default, Django will use a "pretty"
-                                            version of the form field name, if the Field is part of a
-                                            Form. """)),
-        help_text=models.TextField(blank=True,
-                                   help_text=_("An optional string to use as 'help text' for this Field.")),
-
-        initial=models.CharField(max_length=200, blank=True,
-                                 help_text=_("""A value to use in this Field's initial display. This value
-                                              is *not* used as a fallback if data isn't given. """)),
-
-        choices=hstore.DictionaryField(blank=True, null=True),
-
-    )
-
-    objects = TranslationManager()
-
     class Meta:
         order_with_respect_to = 'fieldset'
         ordering = ['fieldset__form', 'fieldset', 'position']
@@ -213,15 +201,24 @@ class Field(TranslatableModel):
 
     @cached_property
     def safe_label(self):
-        return self.safe_translation_getter('label', self.name.title())
+        try:
+            return self.label
+        except:
+            return self.name.title()
 
     @cached_property
     def safe_initial(self):
-        return self.safe_translation_getter('initial', '')
+        try:
+            return self.initial
+        except:
+            return ''
 
     @cached_property
     def safe_help_text(self):
-        return self.safe_translation_getter('help_text', '')
+        try:
+            return self.help_text
+        except:
+            return ''
 
     def formfield_instance_factory(self, field_class=None, attrs=None):
         """Returns an instance of a form field"""

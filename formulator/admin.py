@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import Form, FieldSet, Field
 from django.core import urlresolvers
-from hvad.admin import TranslatableAdmin
 
 
 class FieldSetInline(admin.TabularInline):
@@ -43,12 +42,12 @@ class FormAdmin(admin.ModelAdmin):
     inlines = [FieldSetInline]
 
 
-class FieldSetAdmin(TranslatableAdmin):
+class FieldSetAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name', 'form', 'slug', 'position']
     inlines = [FieldInline]
 
 
-class FieldAdmin(TranslatableAdmin):
+class FieldAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name', 'get_form_field', 'get_fieldset_field','field_id', 'position', 'maxlength', 'required', 'field', 'widget']
 
     def get_fieldset_field(self, obj):
