@@ -1,12 +1,10 @@
-
 from django.conf import settings  # noqa
 from django.utils.encoding import python_2_unicode_compatible
 
 from appconf import AppConf  # noqa
 from model_utils.models import TimeStampedModel
-from floppyforms import fields, widgets
-# We want to get all the fields and widgets
 
+import floppyforms as forms
 
 @python_2_unicode_compatible
 class BaseModel(TimeStampedModel):
@@ -17,10 +15,11 @@ class BaseModel(TimeStampedModel):
 
 class FormulatorConf(AppConf):
 
-    WIDGETS = [(widget, '%s.%s' % (widgets.__name__, widget)) for widget in widgets.__all__]
-    FIELDS = [(field, '%s.%s' % (fields.__name__, field)) for field in fields.__all__]
+    WIDGETS = [(widget, '%s.%s' % (forms.widgets.__name__, widget)) for widget in forms.widgets.__all__]
+    FIELDS = [(field, '%s.%s' % (forms.fields.__name__, field)) for field in forms.fields.__all__]
     BASE_MODEL = BaseModel
     CRISPY_ENABLED = False
-    FLOPPY_ENABLED = False
+    DEFAULT_FORM_LIBRARY = forms
+    DEFAULT_FORM_CLASS = DEFAULT_FORM_LIBRARY.Form
 
 

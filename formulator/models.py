@@ -14,11 +14,6 @@ from positions import PositionField
 from formulator.conf import settings
 
 
-if settings.FORMULATOR_FLOPPY_ENABLED:
-    import floppyforms as forms
-else:
-    from django import forms
-
 if settings.FORMULATOR_CRISPY_ENABLED:
     from crispy_forms.helper import FormHelper
     from crispy_forms import layout
@@ -56,23 +51,24 @@ class Form(settings.FORMULATOR_BASE_MODEL):
     form_target = models.CharField(max_length=50, blank=True)
 
 
-    @cached_property
-    def fields(self):
-        return self.fieldset_set.all()
+
+    #@cached_property
+    #def fields(self):
+    #    return self.fieldset_set.all()
 
     def form_class_factory(self, form_class=None, attrs=None):
         if attrs is None:
             attrs = {}
         if form_class is None:
-            form_class = settings.DEFAULT_FORM_CLASS
+            form_class = settings.FORMULATOR_DEFAULT_FORM_CLASS
 
         # again make sure that we have everything we need to create a class
         self.full_clean()
 
-        for field in self.fields:
+        for field in self.field_set.all():
             attrs[field.field_id] = field.formfield_instance_factory()
 
-        if settings.CRISPY_ENABLED:
+        if settings.FORMULATOR_CRISPY_ENABLED:
 
             layouts = []
 
