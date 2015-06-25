@@ -1,43 +1,29 @@
+sudo: no
 language: python
+cache:
+  # Apparently if you override the install command that silently disables the
+  # cache: pip support. This is less than ideal and I've opened up
+  # travis-ci/travis-ci#3239 to hopefully get that addressed. For now I'll
+  # manually add the pip cache directory to the build cache.
+  directories:
+    - ~/.cache/pip
 
-services:
-  - postgresql
-
-python:
-  - "3.4"
-  - "3.3"
-  - "2.7"
-  - "2.6"
-
-env:
-  - DJANGO="django==1.7"
-  - DJANGO="django==1.5.10"
-  - DJANGO="django==1.6.7"
-
-matrix:
-  exclude:
-    - python: "2.6"
-      env: DJANGO="django==1.7"
-
-branches:
-  only:
-    - master
-
-# command to install requirements
 install:
-  - pip install $DJANGO
-  - pip install -r requirements.txt --use-mirrors
-  - pip install coverage coveralls --use-mirrors
-  - python setup.py -q install
-
-before_script:
-  - psql template1 -c 'create extension hstore;'
-  - createdb formulator
-
-# command to run tests, e.g. python setup.py test
+  - pip wheel -r tests/requirements.txt
+  - pip install tox coveralls
 script:
-  - ./runtests.py --settings=settings
-  - coverage run --source formulator runtests.py
-
-after_success:
-  coveralls
+  - tox
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+  matrix:
+    - TOXENV=py27-django-17
+    - TOXENV=py27-django-18
+    - TOXENV=py32-django-17
+    - TOXENV=py32-django-18
+    - TOXENV=py33-django-17
+    - TOXENV=py33-django-18
+    - TOXENV=py34-django-17
+    - TOXENV=py34-django-18
+after_success: coveralls
