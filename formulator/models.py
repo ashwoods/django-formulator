@@ -175,7 +175,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         if widget:
             field_attrs['widget'] = widget(attrs=widget_attrs)
 
-        if self.maxlength:
+        if self.max_length:
             field_attrs['widget'].max_length = self.max_length
         if self.placeholder:
             field_attrs['widget'].placeholder = self.placeholder
