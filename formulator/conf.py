@@ -10,13 +10,13 @@ import floppyforms as forms
 class BaseModel(TimeStampedModel):
 
     def __str__(self):
-        return '<%s:%s>' % (self.__cls__.name, self.pk)
+        return '<%s:%s>' % (self.__class__.__name__, self.pk)
 
 
 class FormulatorConf(AppConf):
 
-    WIDGETS = [(widget, '%s.%s' % (forms.widgets.__name__, widget)) for widget in forms.widgets.__all__]
-    FIELDS = [(field, '%s.%s' % (forms.fields.__name__, field)) for field in forms.fields.__all__]
+    WIDGETS = [('%s.%s' % (forms.widgets.__name__, widget), widget) for widget in forms.widgets.__all__]
+    FIELDS = [('%s.%s' % (forms.fields.__name__, field), field) for field in forms.fields.__all__]
     BASE_MODEL = BaseModel
     CRISPY_ENABLED = False
     DEFAULT_FORM_LIBRARY = forms
