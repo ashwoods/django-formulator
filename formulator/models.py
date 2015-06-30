@@ -96,7 +96,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     name = models.CharField(max_length=200,
                             help_text=_("""A short name to build the database field """))
 
-    field_id = AutoSlugField(unique_with='form', populate_from=lambda instance: "%s %s" % (instance.form, instance.name))
+    field_id = AutoSlugField(unique_with='form', populate_from=lambda instance: instance.name.lower())
     position = PositionField(collection='form')
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
 
@@ -171,14 +171,15 @@ class Field(settings.FORMULATOR_BASE_MODEL):
             'show_hidden_initial': self.show_hidden_initial,
         })
 
+        if self.max_length:
+            widget_attrs['max_length'] = self.max_length
+        if self.placeholder:
+            widget_attrs['placeholder'] = self.placeholder
 
         if widget:
             field_attrs['widget'] = widget(attrs=widget_attrs)
 
-        if self.max_length:
-            field_attrs['widget'].max_length = self.max_length
-        if self.placeholder:
-            field_attrs['widget'].placeholder = self.placeholder
+
 
         #try:
         #    choices = self.choices

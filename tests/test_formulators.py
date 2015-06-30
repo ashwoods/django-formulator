@@ -6,7 +6,7 @@ import pytest
 from formulator.conf import settings
 from formulator.models import Form, Field, FieldSet, FieldAttribute, WidgetAttribute
 
-from .forms import FloppyTestForm
+from .forms import FloppyTestForm, base_fields
 
 FIELDS = settings.FORMULATOR_FIELDS
 REQUIRE_EXTRA_PARAMS = [
@@ -18,43 +18,41 @@ REQUIRE_EXTRA_PARAMS = [
 
 
 
-
-
 @pytest.mark.django_db
 def get_formulator_form():
     """
     Creates and saves models for formulator instance creation
     """
-    fm_form = Form.objects.create(name='test')
-    Field.objects.create(
-                        form=fm_form,
-                        name='Field',
-                        field_type='Field')
+    fm_form = Form.objects.create(name='Honeypot form')
+
 
     Field.objects.create(
            name="honeypot",
            field_type="CharField",
            required=False,
            widget="HiddenInput",
-           form=fm_form
+           form=fm_form,
        )
 
     Field.objects.create(
            name="firstname",
            field_type="CharField",
            label='Your first name?',
-           form=fm_form
+           form=fm_form,
+           required=True
        )
 
     Field.objects.create(
            name="lastname",
            field_type="CharField",
            label='Your last name:',
-           form=fm_form
+           form=fm_form,
+           required=True,
        )
 
-    field1 = Field.objects.create(
+    Field.objects.create(
            name="username",
+           label="Username:",
            field_type="CharField",
            form=fm_form,
            max_length=30,
@@ -62,33 +60,35 @@ def get_formulator_form():
 
        )
 
-
-    #field1.widgetattribute_set.create(key='max_length', value=30)
-    #field1.widgetattribute_set.create(key='placeholder', value='username here')
-
-
     Field.objects.create(
            name="password",
+           label='Password:',
            field_type="CharField",
            widget='PasswordInput',
            help_text='Make sure to use a secure password.',
-           form=fm_form
+           form=fm_form,
+           required=True,
     )
+
     Field.objects.create(
            name="password2",
            field_type="CharField",
            label='Retype password',
            widget='PasswordInput',
-           form=fm_form
+           form=fm_form,
+           required=True,
     )
+
     Field.objects.create(
            name="age",
+           label="Age:",
            field_type="IntegerField",
            required=False,
            form=fm_form
     )
 
-
+    for field_type in base_fields:
+        Field.objects.create(name=field_type.title(), label="%s:" % field_type.title(), field_type=field_type, required=False, form=fm_form)
 
     return fm_form
 
@@ -105,7 +105,7 @@ class TestDjangoFormFormulators():
 
     def test_field_classes(self):
         """
-        Test form html equality
+        Tests that both form fields have the same classes (and in the same order +=)
         """
         django_form = FloppyTestForm()
         formulator_form = get_formulator_form().form_class_factory()()
@@ -117,6 +117,17 @@ class TestDjangoFormFormulators():
         django_form = FloppyTestForm()
         formulator_form = get_formulator_form().form_class_factory()()
         assert len(django_form.fields) == len(formulator_form.fields)
+
+
+    def test_html_output(self):
+        """
+        Test form html equality
+        """
+        django_form = FloppyTestForm()
+        formulator_form = get_formulator_form().form_class_factory()()
+        assert(django_form.as_p().replace('\n', '').replace(' ', '') == formulator_form.as_p().replace('\n', '').replace(' ', '') )
+
+
 
 #    def test_field_ordering(self):
 #        """

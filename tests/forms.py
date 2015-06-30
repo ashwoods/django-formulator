@@ -25,25 +25,6 @@ class BaseForm(object):
 
     FORM_CLASS = None
 
-    honeypot = forms.CharField(required=False, widget=forms.HiddenInput)
-    firstname = forms.CharField(label='Your first name?')
-    lastname = forms.CharField(label='Your last name:')
-    username = forms.CharField(widget=forms.TextInput(attrs={'max_length': 30, 'placeholder': 'username here'}))
-    password = forms.CharField(
-        widget=forms.PasswordInput,
-        help_text='Make sure to use a secure password.',
-    )
-    password2 = forms.CharField(label='Retype password', widget=forms.PasswordInput)
-    age = forms.IntegerField(required=False)
-
-    def __init__(self, *args , **kwargs):
-
-        super(BaseForm, self).__init__(*args, **kwargs)
-        for field in base_fields:
-            print field
-            self.fields['%s__field' % field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
-
-
     # extra fields
 
     # booleanfield
@@ -98,9 +79,41 @@ class BaseForm(object):
 class DjangoTestForm(BaseForm, forms.Form):
     FORM_CLASS = forms
 
+    honeypot = forms.CharField(required=False, widget=forms.HiddenInput)
+    firstname = forms.CharField(label='Your first name?', required=True)
+    lastname = forms.CharField(label='Your last name:')
+    username = forms.CharField(widget=forms.TextInput(attrs={'max_length': 30, 'placeholder': 'username here'}))
+    password = forms.CharField(
+        widget=forms.PasswordInput,
+        help_text='Make sure to use a secure password.',
+    )
+    password2 = forms.CharField(label='Retype password', widget=forms.PasswordInput)
+    age = forms.IntegerField(required=False)
 
+    def __init__(self, *args , **kwargs):
+
+        super(FloppyTestForm, self).__init__(*args, **kwargs)
+        for field in base_fields:
+            self.fields[field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
 
 
 class FloppyTestForm(BaseForm, floppy_forms.Form):
     FORM_CLASS = floppy_forms
 
+
+    honeypot = FORM_CLASS.CharField(required=False, widget=FORM_CLASS.HiddenInput)
+    firstname = FORM_CLASS.CharField(label='Your first name?', required=True)
+    lastname = FORM_CLASS.CharField(label='Your last name:')
+    username = FORM_CLASS.CharField(label='Username:', widget=FORM_CLASS.TextInput(attrs={'max_length': 30, 'placeholder': 'username here'}))
+    password = FORM_CLASS.CharField(
+        widget=FORM_CLASS.PasswordInput,
+        help_text='Make sure to use a secure password.',
+    )
+    password2 = FORM_CLASS.CharField(label='Retype password', widget=FORM_CLASS.PasswordInput)
+    age = FORM_CLASS.IntegerField(label='Age', required=False)
+
+    def __init__(self, *args , **kwargs):
+
+        super(FloppyTestForm, self).__init__(*args, **kwargs)
+        for field in base_fields:
+            self.fields[field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
