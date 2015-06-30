@@ -109,7 +109,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
     field_id = AutoSlugField(unique_with='fieldset__form', populate_from=create_field_slug, slugify=variable_slugify)
     position = PositionField(collection='fieldset')
-    field = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
+    field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
     maxlength = models.IntegerField(blank=True, null=True)
     #attrs = hstore.DictionaryField(blank=True, null=True)
     #choices=hstore.DictionaryField(blank=True, null=True)
@@ -142,7 +142,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
         # Get the field class for this particular field
         if field_class is None:
-            field_class = dict(settings.FORMULATOR_FIELDS)[self.field]
+            field_class = dict(settings.FORMULATOR_FIELDS)[self.field_type]
 
         if attrs is None:
             attrs = {}

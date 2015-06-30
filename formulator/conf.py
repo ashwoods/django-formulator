@@ -10,7 +10,7 @@ import floppyforms as forms
 class BaseModel(TimeStampedModel):
 
     def __str__(self):
-        return '<%s:%s>' % (self.__cls__.name, self.pk)
+        return '<%s:%s>' % (self.__class__.name, self.pk)
 
 
 class FormulatorConf(AppConf):
