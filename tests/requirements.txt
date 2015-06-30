@@ -6,3 +6,4 @@ coverage
 SQLAlchemy
 pytest-django
 pytest-cov
+ipdb

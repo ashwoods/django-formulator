@@ -6,7 +6,7 @@ import pytest
 from formulator.conf import settings
 from formulator.models import Form, Field, FieldSet
 
-from .forms import RegistrationForm
+from .forms import DjangoTestForm
 
 FIELDS = settings.FORMULATOR_FIELDS
 REQUIRE_EXTRA_PARAMS = [
@@ -17,85 +17,42 @@ REQUIRE_EXTRA_PARAMS = [
 ]
 
 
+
+
+
 @pytest.mark.django_db
 def formulator_form():
     """
     Creates and saves models for formulator instance creation
     """
     fm_form = Form.objects.create(name='test')
-    fm_form.save()
+    Field.objects.create(
+                        form=fm_form,
+                        name='Field',
+                        field_type='Field')
+    return fm_form
 
-    fm_fieldset = FieldSet.objects.create(
-                                        form=fm_form,
-                                        name='fieldset_1',
-                                        legend='This is a legend')
-    fm_fieldset.save()
-
-    field = Field.objects.create(
-                                fieldset=fm_fieldset,
-                                name='Field',
-                                field_type='Field')
-
-    # A bunch of formulator fields, of all the FIELDS types
-   # for field_type in FIELDS:
-   #     field_name = field_type[0]
-   #     field_class = field_type[1]
-   #     if field_name in REQUIRE_EXTRA_PARAMS:
-   #         pass
-   #     else:
-   #         Field(
-   #                              name=field_name,
-   #                              fieldset=fieldset,
-   #                              label=field_name,
-   #                              field=field_class,
-   #                              help_text="test help text",
-   #                              attrs={"placeholder":field_name}
-   #         )
-   # 
-    # Class variable for the form class
-    form_class = fm_form.form_class_factory()
-
-    # A generator providing the fields in the form
-    field_getter = iter(form_class.base_fields.values())
-
-    return form_class
-
-#@pytest.mark.django_db
-#class TestCreateEmptyForm():
-#    
-#    def test_no_name_fails(self):
-#        """
-#        The Form needs a name, classes without names seem wrong.
-#        """
-#        # This should raise an AttributeError: 'Options' object has no attribute 'module_name'
-#        with pytest.raises(AttributeError):
-#            form_class = Form.objects.create()
-#
-#    def test_is_form_subclass(self):
-#        """
-#        Test that form_class_factory returns a subclass from DEFAULT_FORM_CLASS
-#        """
-#        formulator = Form.objects.create(name='test')
-#        FORM_CLASS = formulator.form_class_factory()
-#        assert issubclass(FORM_CLASS, settings.FORMULATOR_DEFAULT_FORM_CLASS)
-#
-#    def test_form_instance(self):
-#        """
-#        Test that we can instantiate a dynamic form
-#        """
-#        form_class = Form.objects.create(name='test').form_class_factory()
-#        form = form_class()
-#        assert isinstance(form, form_class)
-#
 
 @pytest.mark.django_db
-class TestCreateFormFields():
+class TestDjangoFormFormulators():
 
-    def test_form_with_default_fields(self):
+    def test_form_class(self):
         """
         Test that we have an instance form with fields
         """
         assert issubclass(formulator_form(), settings.FORMULATOR_DEFAULT_FORM_CLASS)
+
+
+    def test_field_classes(self):
+        """
+        Test form html equality
+        """
+        django_form = DjangoTestForm()
+        formulator = formulator_form()
+        for item in dict(zip(django_form, formulator.form_class_factory())):
+            import ipdb; ipdb.set_trace()
+
+
 
 #    def test_field_ordering(self):
 #        """
