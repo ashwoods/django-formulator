@@ -99,7 +99,11 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     field_id = AutoSlugField(unique_with='form', populate_from=lambda instance: "%s %s" % (instance.form, instance.name))
     position = PositionField(collection='form')
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
-    maxlength = models.IntegerField(blank=True, null=True)
+
+    # exceptions
+    max_length = models.IntegerField(blank=True, null=True)
+    placeholder = models.CharField(max_length=255, blank=True)
+
     required = models.BooleanField(default=True)
     help_text=models.TextField(blank=True,
                                help_text=_("An optional string to use as 'help text' for this Field."))
@@ -172,7 +176,10 @@ class Field(settings.FORMULATOR_BASE_MODEL):
             field_attrs['widget'] = widget(attrs=widget_attrs)
 
         if self.maxlength:
-            field_attrs.maxlength = self.maxlength
+            field_attrs['widget'].max_length = self.max_length
+        if self.placeholder:
+            field_attrs['widget'].placeholder = self.placeholder
+
         #try:
         #    choices = self.choices
         #except:

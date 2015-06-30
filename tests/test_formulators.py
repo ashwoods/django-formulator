@@ -56,12 +56,15 @@ def get_formulator_form():
     field1 = Field.objects.create(
            name="username",
            field_type="CharField",
-           form=fm_form
+           form=fm_form,
+           max_length=30,
+           placeholder='username here',
+
        )
 
 
-    field1.widgetattribute_set.create(key='max_length', value=30)
-    field1.widgetattribute_set.create(key='placeholder', value='username here')
+    #field1.widgetattribute_set.create(key='max_length', value=30)
+    #field1.widgetattribute_set.create(key='placeholder', value='username here')
 
 
     Field.objects.create(
