@@ -102,5 +102,5 @@ class DjangoTestForm(BaseForm, forms.Form):
 
 
 class FloppyTestForm(BaseForm, floppy_forms.Form):
-    pass
+    FORM_CLASS = floppy_forms
 

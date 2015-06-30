@@ -100,8 +100,6 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     position = PositionField(collection='form')
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
     maxlength = models.IntegerField(blank=True, null=True)
-    #attrs = hstore.DictionaryField(blank=True, null=True)
-    #choices=hstore.DictionaryField(blank=True, null=True)
     required = models.BooleanField(default=True)
     help_text=models.TextField(blank=True,
                                help_text=_("An optional string to use as 'help text' for this Field."))
@@ -126,15 +124,22 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
 
 
-    def formfield_instance_factory(self, field_class=None, attrs=None):
+    def formfield_instance_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
         """Returns an instance of a form field"""
 
         # Get the field class for this particular field
         if field_class is None:
-            field_class = dict(settings.FORMULATOR_FIELDS)[self.field_type]
+            for cls, n in settings.FORMULATOR_FIELDS:
+                if n == self.field_type:
+                    field_class = cls
 
-        if attrs is None:
-            attrs = {}
+
+
+        if field_attrs is None:
+            field_attrs = dict(self.fieldattribute_set.values_list('key','value'))
+
+        if widget_attrs is None:
+            widget_attrs = dict(self.widgetattribute_set.values_list('key','value'))
 
 
         module_name, class_name = field_class.rsplit(".", 1)
@@ -146,12 +151,15 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         if not self.widget:
             widget = getattr(field, 'widget', None)
         else:
-            widget_class = dict(settings.FORMULATOR_WIDGETS)[self.widget]
-            module_name, class_name = widget_class.rsplit(".", 1)
-            module = importlib.import_module(module_name)
-            widget = getattr(module, class_name)
+            for cls, n in settings.FORMULATOR_WIDGETS:
+                if n == self.widget:
+                    widget_class = cls
 
-        attrs.update({
+                    module_name, class_name = widget_class.rsplit(".", 1)
+                    module = importlib.import_module(module_name)
+                    widget = getattr(module, class_name)
+
+        field_attrs.update({
             'required': self.required,
             'label': self.label,
             'initial': self.initial,
@@ -159,11 +167,12 @@ class Field(settings.FORMULATOR_BASE_MODEL):
             'show_hidden_initial': self.show_hidden_initial,
         })
 
-        if widget:
-            attrs['widget'] = widget(attrs=attrs)
-        if self.maxlength:
-            attrs['max_length'] = self.maxlength
 
+        if widget:
+            field_attrs['widget'] = widget(attrs=widget_attrs)
+
+        if self.maxlength:
+            field_attrs.maxlength = self.maxlength
         #try:
         #    choices = self.choices
         #except:
@@ -173,7 +182,25 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         #    choices = [(key, _(value)) for key, value in choices.iteritems()]
         #    choices.reverse()
         #    attrs['choices'] = choices
-        return field(**attrs)
+        return field(**field_attrs)
+
+
+class FieldAttribute(settings.FORMULATOR_BASE_MODEL):
+    field = models.ForeignKey(Field)
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=100, blank=True)
+
+
+class WidgetAttribute(settings.FORMULATOR_BASE_MODEL):
+    field = models.ForeignKey(Field)
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=100)
+
+
+class Choices(settings.FORMULATOR_BASE_MODEL):
+    field = models.ForeignKey(Field)
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=100, blank=True)
 
 
 class FieldSet(settings.FORMULATOR_BASE_MODEL):

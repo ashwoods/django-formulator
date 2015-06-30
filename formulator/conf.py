@@ -16,7 +16,7 @@ class BaseModel(TimeStampedModel):
 class FormulatorConf(AppConf):
 
     WIDGETS = [('%s.%s' % (forms.widgets.__name__, widget), widget) for widget in forms.widgets.__all__]
-    FIELDS = [('%s.%s' % (forms.fields.__name__, field), widget) for field in forms.fields.__all__]
+    FIELDS = [('%s.%s' % (forms.fields.__name__, field), field) for field in forms.fields.__all__]
     BASE_MODEL = BaseModel
     CRISPY_ENABLED = False
     DEFAULT_FORM_LIBRARY = forms

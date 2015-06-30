@@ -4,9 +4,9 @@ Formulator Tests
 """
 import pytest
 from formulator.conf import settings
-from formulator.models import Form, Field, FieldSet
+from formulator.models import Form, Field, FieldSet, FieldAttribute, WidgetAttribute
 
-from .forms import DjangoTestForm
+from .forms import FloppyTestForm
 
 FIELDS = settings.FORMULATOR_FIELDS
 REQUIRE_EXTRA_PARAMS = [
@@ -21,7 +21,7 @@ REQUIRE_EXTRA_PARAMS = [
 
 
 @pytest.mark.django_db
-def formulator_form():
+def get_formulator_form():
     """
     Creates and saves models for formulator instance creation
     """
@@ -30,6 +30,63 @@ def formulator_form():
                         form=fm_form,
                         name='Field',
                         field_type='Field')
+
+    Field.objects.create(
+           name="honeypot",
+           field_type="CharField",
+           required=False,
+           widget="HiddenInput",
+           form=fm_form
+       )
+
+    Field.objects.create(
+           name="firstname",
+           field_type="CharField",
+           label='Your first name?',
+           form=fm_form
+       )
+
+    Field.objects.create(
+           name="lastname",
+           field_type="CharField",
+           label='Your last name:',
+           form=fm_form
+       )
+
+    field1 = Field.objects.create(
+           name="username",
+           field_type="CharField",
+           form=fm_form
+       )
+
+
+    field1.widgetattribute_set.create(key='max_length', value=30)
+    field1.widgetattribute_set.create(key='placeholder', value='username here')
+
+
+    Field.objects.create(
+           name="password",
+           field_type="CharField",
+           widget='PasswordInput',
+           help_text='Make sure to use a secure password.',
+           form=fm_form
+    )
+    Field.objects.create(
+           name="password2",
+           field_type="CharField",
+           label='Retype password',
+           widget='PasswordInput',
+           form=fm_form
+    )
+    Field.objects.create(
+           name="age",
+           field_type="IntegerField",
+           required=False,
+           form=fm_form
+    )
+
+
+
     return fm_form
 
 
@@ -40,19 +97,23 @@ class TestDjangoFormFormulators():
         """
         Test that we have an instance form with fields
         """
-        assert issubclass(formulator_form(), settings.FORMULATOR_DEFAULT_FORM_CLASS)
+        assert issubclass(get_formulator_form().form_class_factory(), settings.FORMULATOR_DEFAULT_FORM_CLASS)
 
 
     def test_field_classes(self):
         """
         Test form html equality
         """
-        django_form = DjangoTestForm()
-        formulator = formulator_form()
-        for item in dict(zip(django_form, formulator.form_class_factory())):
-            import ipdb; ipdb.set_trace()
+        django_form = FloppyTestForm()
+        formulator_form = get_formulator_form().form_class_factory()()
+        for item in zip(django_form, formulator_form):
+            assert(type(item[0]) is type(item[1]))
 
+    def test_fields_length(self):
 
+        django_form = FloppyTestForm()
+        formulator_form = get_formulator_form().form_class_factory()()
+        assert len(django_form.fields) == len(formulator_form.fields)
 
 #    def test_field_ordering(self):
 #        """
