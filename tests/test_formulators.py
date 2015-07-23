@@ -3,10 +3,14 @@
 Formulator Tests
 """
 import pytest
+
+from crispy_forms.templatetags.crispy_forms_filters import as_crispy_form
+from crispy_forms.templatetags.crispy_forms_tags import do_uni_form
+
 from formulator.conf import settings
 from formulator.models import Form, Field, FieldSet, FieldAttribute, WidgetAttribute
 
-from .forms import FloppyTestForm, base_fields
+from .forms import FloppyTestForm, CrispyTestForm, base_fields
 
 FIELDS = settings.FORMULATOR_FIELDS
 REQUIRE_EXTRA_PARAMS = [
@@ -17,14 +21,12 @@ REQUIRE_EXTRA_PARAMS = [
 ]
 
 
-
 @pytest.mark.django_db
 def get_formulator_form():
     """
     Creates and saves models for formulator instance creation
     """
     fm_form = Form.objects.create(name='Honeypot form')
-
 
     Field.objects.create(
            name="honeypot",
@@ -92,6 +94,31 @@ def get_formulator_form():
 
     return fm_form
 
+@pytest.mark.django_db
+def get_formulator_fieldset_form():
+    """
+    Creates and saves models for formulator instance creation
+    """
+    fm_form = Form.objects.create(name='Fielset form')
+
+    fm_fieldset = FieldSet.objects.create(
+                            name="Fieldset",
+                            legend="This is a fieldset",
+                            form=fm_form            
+                        )
+
+    for field_type in base_fields:
+        Field.objects.create(
+                name=field_type.title(),
+                label="%s:" % field_type.title(),
+                field_type=field_type,
+                required=False,
+                form=fm_form,
+                fieldset=fm_fieldset
+        )
+
+    return fm_form
+
 
 @pytest.mark.django_db
 class TestDjangoFormFormulators():
@@ -126,8 +153,6 @@ class TestDjangoFormFormulators():
         django_form = FloppyTestForm()
         formulator_form = get_formulator_form().form_class_factory()()
         assert(django_form.as_p().replace('\n', '').replace(' ', '') == formulator_form.as_p().replace('\n', '').replace(' ', '') )
-
-
 
 #    def test_field_ordering(self):
 #        """
@@ -289,3 +314,15 @@ class TestDjangoFormFormulators():
 #
 #    def test_compare_registration_form(self):
 #        pass
+
+@pytest.mark.django_db
+class TestDjangoFormFieldsetFormulators():
+
+    def test_html_output(self):
+        """
+        Test form html equality
+        """
+        django_form = CrispyTestForm()
+        formulator_form = get_formulator_fieldset_form().form_class_factory()()
+
+        assert(as_crispy_form(django_form).replace('\n', '').replace(' ', '') == formulator_form.as_p().replace('\n', '').replace(' ', '') )

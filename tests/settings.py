@@ -9,12 +9,14 @@ DATABASES = {
     },
 }
 
-
 INSTALLED_APPS = [
     'formulator',
     'floppyforms',
+    'crispy_forms',
 ]
 
 ROOT_URLCONF = 'urls'
 
 MIDDLEWARE_CLASSES = []
+
+FORMULATOR_CRISPY_ENABLED = True
