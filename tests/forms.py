@@ -8,6 +8,8 @@ from django import forms
 
 import floppyforms as floppy_forms
 
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Fieldset, HTML
 
 base_fields = (
     'Field', 'CharField', 'IntegerField', 'DateField', 'TimeField',
@@ -117,3 +119,25 @@ class FloppyTestForm(BaseForm, floppy_forms.Form):
         super(FloppyTestForm, self).__init__(*args, **kwargs)
         for field in base_fields:
             self.fields[field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
+
+
+class CrispyTestForm(forms.Form):
+
+    FORM_CLASS  = floppy_forms
+
+    def __init__(self, *args , **kwargs):
+
+        super(CrispyTestForm, self).__init__(*args, **kwargs)
+        for field in base_fields:
+            self.fields[field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
+
+        field_list = list(self.fields.keys())
+        self.helper = FormHelper()
+        self.helper.form_id = 'fieldset-form'
+        self.helper.layout = Layout(
+            Fieldset(
+                'This is a fieldset',
+                *field_list
+            ),
+        )
+

@@ -43,7 +43,9 @@ class Form(settings.FORMULATOR_BASE_MODEL):
     form_enctype = models.IntegerField(choices=ENCTYPES, default=ENCTYPES.urlencoded)
     form_target = models.CharField(max_length=50, blank=True)
 
-
+    @cached_property
+    def fieldsets(self):
+        return self.fieldset_set.all().prefetch_related('field_set')
 
     def form_class_factory(self, form_class=None, attrs=None):
         if attrs is None:
@@ -61,24 +63,55 @@ class Form(settings.FORMULATOR_BASE_MODEL):
 
             layouts = []
 
+            for fieldset in self.fieldsets:
+                fieldset_fields = fieldset.fields
+
+                fieldset_layout = layout.Fieldset(fieldset.safe_legend, *[f.field_id for f in fieldset_fields])
+                layouts.append(fieldset_layout)
+
+                for field in fieldset_fields:
+                    attrs[field.field_id] = field.formfield_instance_factory()
+
             helper = getattr(form_class, 'helper', FormHelper())
             helper.form_id = self.form_id
             helper.form_action = self.form_action
             helper.form_method = self.METHODS[self.form_method]
-            helper.attrs = {
-                'accept-charset': self.form_accept_charset,
-                'autocomplete': self.form_autocomplete,
-                'novalidate': self.form_novalidate,
-                'enctype': self.form_enctype,
-                'target': self.form_target
-            }
+            helper.attrs = {}
+            
+            if self.form_accept_charset: helper.attrs['accept-charset'] = self.form_accept_charset
+            if self.form_autocomplete: helper.attrs['autocomplete'] = self.form_autocomplete
+            if self.form_novalidate: helper.attrs['novalidate'] = self.form_novalidate
+            if self.form_enctype: helper.attrs['enctype'] = self.form_enctype
+            if self.form_target: helper.attrs['target'] = self.form_target
 
             helper.layout = layout.Layout(*layouts)
 
             attrs['helper'] = helper
+
         return type(str(self.form_id), (form_class,), attrs)
 
 
+class FieldSet(settings.FORMULATOR_BASE_MODEL):
+    form = models.ForeignKey(Form)
+    position = PositionField(collection='form')
+
+    name = models.CharField(max_length=100)
+    #slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
+
+    legend=models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ['form', 'position']
+
+    @cached_property
+    def safe_legend(self):
+        try:
+            return self.legend
+        except:
+            return self.name.title()
+    @cached_property
+    def fields(self):
+        return self.field_set.all()
 
 class Field(settings.FORMULATOR_BASE_MODEL):
     """
@@ -87,6 +120,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     """
 
     form = models.ForeignKey(Form)
+    fieldset = models.ForeignKey(FieldSet, null=True)
     label=models.CharField(max_length=200,
                            help_text=_("""A verbose name for this field, for use in displaying this
                                         field in a form. By default, Django will use a "pretty"
@@ -173,6 +207,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
         if self.max_length:
             widget_attrs['max_length'] = self.max_length
+
         if self.placeholder:
             widget_attrs['placeholder'] = self.placeholder
 
@@ -210,17 +245,4 @@ class Choices(settings.FORMULATOR_BASE_MODEL):
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
 
-
-class FieldSet(settings.FORMULATOR_BASE_MODEL):
-     form = models.ForeignKey(Form)
-     position = PositionField(collection='form')
-
-     name = models.CharField(max_length=100)
-     #slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
-
-     legend=models.CharField(max_length=200)
-     fields=models.ManyToManyField(Field)
-
-     class Meta:
-         ordering = ['form', 'position']
 
