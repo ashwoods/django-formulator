@@ -8,7 +8,6 @@ from django.utils.functional import cached_property
 
 from model_utils import Choices
 from autoslug import AutoSlugField
-from autoslug.settings import slugify as default_slugify
 from positions import PositionField
 
 from formulator.conf import settings
@@ -17,7 +16,6 @@ from formulator.conf import settings
 if settings.FORMULATOR_CRISPY_ENABLED:
     from crispy_forms.helper import FormHelper
     from crispy_forms import layout
-
 
 
 class Form(settings.FORMULATOR_BASE_MODEL):
@@ -77,12 +75,17 @@ class Form(settings.FORMULATOR_BASE_MODEL):
             helper.form_action = self.form_action
             helper.form_method = self.METHODS[self.form_method]
             helper.attrs = {}
-            
-            if self.form_accept_charset: helper.attrs['accept-charset'] = self.form_accept_charset
-            if self.form_autocomplete: helper.attrs['autocomplete'] = self.form_autocomplete
-            if self.form_novalidate: helper.attrs['novalidate'] = self.form_novalidate
-            if self.form_enctype: helper.attrs['enctype'] = self.form_enctype
-            if self.form_target: helper.attrs['target'] = self.form_target
+
+            if self.form_accept_charset:
+                helper.attrs['accept-charset'] = self.form_accept_charset
+            if self.form_autocomplete:
+                helper.attrs['autocomplete'] = self.form_autocomplete
+            if self.form_novalidate:
+                helper.attrs['novalidate'] = self.form_novalidate
+            if self.form_enctype:
+                helper.attrs['enctype'] = self.form_enctype
+            if self.form_target:
+                helper.attrs['target'] = self.form_target
 
             helper.layout = layout.Layout(*layouts)
 
@@ -96,9 +99,7 @@ class FieldSet(settings.FORMULATOR_BASE_MODEL):
     position = PositionField(collection='form')
 
     name = models.CharField(max_length=100)
-    #slug = AutoSlugField(unique_with="form", populate_from='name', slugify=variable_slugify)
-
-    legend=models.CharField(max_length=200)
+    legend = models.CharField(max_length=200)
 
     class Meta:
         ordering = ['form', 'position']
@@ -109,9 +110,11 @@ class FieldSet(settings.FORMULATOR_BASE_MODEL):
             return self.legend
         except:
             return self.name.title()
+
     @cached_property
     def fields(self):
         return self.field_set.all()
+
 
 class Field(settings.FORMULATOR_BASE_MODEL):
     """
@@ -121,8 +124,8 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
     form = models.ForeignKey(Form)
     fieldset = models.ForeignKey(FieldSet, null=True)
-    label=models.CharField(max_length=200,
-                           help_text=_("""A verbose name for this field, for use in displaying this
+    label = models.CharField(max_length=200,
+                             help_text=_("""A verbose name for this field, for use in displaying this
                                         field in a form. By default, Django will use a "pretty"
                                         version of the form field name, if the Field is part of a
                                         Form. """))
@@ -139,11 +142,11 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     placeholder = models.CharField(max_length=255, blank=True)
 
     required = models.BooleanField(default=True)
-    help_text=models.TextField(blank=True,
-                               help_text=_("An optional string to use as 'help text' for this Field."))
+    help_text = models.TextField(blank=True,
+                                 help_text=_("An optional string to use as 'help text' for this Field."))
 
-    initial=models.CharField(max_length=200, blank=True,
-                             help_text=_("""A value to use in this Field's initial display. This value
+    initial = models.CharField(max_length=200, blank=True,
+                               help_text=_("""A value to use in this Field's initial display. This value
                                           is *not* used as a fallback if data isn't given. """))
 
     widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
@@ -160,8 +163,6 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         order_with_respect_to = 'form'
         ordering = ['form', 'position']
 
-
-
     def formfield_instance_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
         """Returns an instance of a form field"""
 
@@ -171,19 +172,15 @@ class Field(settings.FORMULATOR_BASE_MODEL):
                 if n == self.field_type:
                     field_class = cls
 
-
-
         if field_attrs is None:
-            field_attrs = dict(self.fieldattribute_set.values_list('key','value'))
+            field_attrs = dict(self.fieldattribute_set.values_list('key', 'value'))
 
         if widget_attrs is None:
-            widget_attrs = dict(self.widgetattribute_set.values_list('key','value'))
-
+            widget_attrs = dict(self.widgetattribute_set.values_list('key', 'value'))
 
         module_name, class_name = field_class.rsplit(".", 1)
         module = importlib.import_module(module_name)
         field = getattr(module, class_name)
-
 
         # Get the widget class for this particular field
         if not self.widget:
@@ -214,17 +211,6 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         if widget:
             field_attrs['widget'] = widget(attrs=widget_attrs)
 
-
-
-        #try:
-        #    choices = self.choices
-        #except:
-        #    choices = None
-
-        #if choices:
-        #    choices = [(key, _(value)) for key, value in choices.iteritems()]
-        #    choices.reverse()
-        #    attrs['choices'] = choices
         return field(**field_attrs)
 
 
@@ -244,5 +230,3 @@ class Choices(settings.FORMULATOR_BASE_MODEL):
     field = models.ForeignKey(Field)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
-
-

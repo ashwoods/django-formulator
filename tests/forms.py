@@ -9,7 +9,7 @@ from django import forms
 import floppyforms as floppy_forms
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, HTML
+from crispy_forms.layout import Layout, Fieldset
 
 base_fields = (
     'Field', 'CharField', 'IntegerField', 'DateField', 'TimeField',
@@ -21,52 +21,12 @@ base_fields = (
     'SplitDateTimeField',
 )
 
-complex_fields = ('RegexField','FilePathField',)
+complex_fields = ('RegexField', 'FilePathField')
+
 
 class BaseForm(object):
 
     FORM_CLASS = None
-
-    # extra fields
-
-    # booleanfield
-    # charfield ##
-    #
-    # choicefield ##
-    # typedchoicefield ##
-    # filepathfield ##
-    #
-    # datefield ##
-    # datetimefield ##
-    # decimalfield ##
-    # emailfield ##
-    # filefield ##
-    # floatfield ##
-    # imagefield ##
-    # integerfield ##
-    # multiplechoicefield ##
-    # typedmultiplechoicefield ##
-    #
-    # nullbooleanfield ##
-    # timefield ##
-    # urlfield ##
-    # slugfield ##
-    # regexfield ##
-    # ipaddressfield ##
-    # genericipaddressfield ##
-
-    # only django
-    # uuidfield
-
-    # complex field
-    #combofield
-    #mutlivaluefield
-    #splitdatetimefield
-
-    # relationship fields
-    #modelmultiplechoicefield
-    #modelchoicefield
-
 
     def clean_honeypot(self):
         if self.cleaned_data.get('honeypot'):
@@ -92,7 +52,7 @@ class DjangoTestForm(BaseForm, forms.Form):
     password2 = forms.CharField(label='Retype password', widget=forms.PasswordInput)
     age = forms.IntegerField(required=False)
 
-    def __init__(self, *args , **kwargs):
+    def __init__(self, *args, **kwargs):
 
         super(FloppyTestForm, self).__init__(*args, **kwargs)
         for field in base_fields:
@@ -102,19 +62,20 @@ class DjangoTestForm(BaseForm, forms.Form):
 class FloppyTestForm(BaseForm, floppy_forms.Form):
     FORM_CLASS = floppy_forms
 
-
     honeypot = FORM_CLASS.CharField(required=False, widget=FORM_CLASS.HiddenInput)
     firstname = FORM_CLASS.CharField(label='Your first name?', required=True)
     lastname = FORM_CLASS.CharField(label='Your last name:')
-    username = FORM_CLASS.CharField(label='Username:', widget=FORM_CLASS.TextInput(attrs={'max_length': 30, 'placeholder': 'username here'}))
+    username = FORM_CLASS.CharField(label='Username:', widget=FORM_CLASS.TextInput(attrs={'max_length': 30,
+                                                                                          'placeholder': 'username here'
+                                                                                          }))
     password = FORM_CLASS.CharField(
         widget=FORM_CLASS.PasswordInput,
-        help_text='Make sure to use a secure password.',
+        help_text='Make sure to use a secure password.'
     )
     password2 = FORM_CLASS.CharField(label='Retype password', widget=FORM_CLASS.PasswordInput)
     age = FORM_CLASS.IntegerField(label='Age', required=False)
 
-    def __init__(self, *args , **kwargs):
+    def __init__(self, *args, **kwargs):
 
         super(FloppyTestForm, self).__init__(*args, **kwargs)
         for field in base_fields:
@@ -123,9 +84,9 @@ class FloppyTestForm(BaseForm, floppy_forms.Form):
 
 class CrispyTestForm(forms.Form):
 
-    FORM_CLASS  = floppy_forms
+    FORM_CLASS = floppy_forms
 
-    def __init__(self, *args , **kwargs):
+    def __init__(self, *args, **kwargs):
 
         super(CrispyTestForm, self).__init__(*args, **kwargs)
         for field in base_fields:
@@ -140,4 +101,3 @@ class CrispyTestForm(forms.Form):
                 *field_list
             ),
         )
-

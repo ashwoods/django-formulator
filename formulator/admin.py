@@ -9,11 +9,9 @@ class FieldInline(admin.TabularInline):
     fields = ('name', 'field', 'widget', 'maxlength', 'required', 'position',)
 
 
-
 class FormAdmin(admin.ModelAdmin):
     list_display = ['pk', 'name', 'form_name', 'form_action', 'form_method', 'form_id', 'form_class']
     inlines = [FieldInline]
-
 
 
 admin.site.register(Form, FormAdmin)

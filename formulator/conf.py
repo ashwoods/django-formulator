@@ -6,6 +6,7 @@ from model_utils.models import TimeStampedModel
 
 import floppyforms as forms
 
+
 @python_2_unicode_compatible
 class BaseModel(TimeStampedModel):
 
@@ -21,5 +22,3 @@ class FormulatorConf(AppConf):
     CRISPY_ENABLED = False
     DEFAULT_FORM_LIBRARY = forms
     DEFAULT_FORM_CLASS = DEFAULT_FORM_LIBRARY.Form
-
-
