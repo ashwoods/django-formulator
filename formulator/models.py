@@ -76,13 +76,13 @@ class Form(settings.FORMULATOR_BASE_MODEL):
             helper.form_id = self.form_id
             helper.form_action = self.form_action
             helper.form_method = self.METHODS[self.form_method]
-            helper.attrs = {
-                'accept-charset': self.form_accept_charset,
-                'autocomplete': self.form_autocomplete,
-                'novalidate': self.form_novalidate,
-                'enctype': self.form_enctype,
-                'target': self.form_target
-            }
+            helper.attrs = {}
+            
+            if self.form_accept_charset: helper.attrs['accept-charset'] = self.form_accept_charset
+            if self.form_autocomplete: helper.attrs['autocomplete'] = self.form_autocomplete
+            if self.form_novalidate: helper.attrs['novalidate'] = self.form_novalidate
+            if self.form_enctype: helper.attrs['enctype'] = self.form_enctype
+            if self.form_target: helper.attrs['target'] = self.form_target
 
             helper.layout = layout.Layout(*layouts)
 
@@ -207,6 +207,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
         if self.max_length:
             widget_attrs['max_length'] = self.max_length
+
         if self.placeholder:
             widget_attrs['placeholder'] = self.placeholder
 

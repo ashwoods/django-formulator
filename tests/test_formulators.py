@@ -8,6 +8,8 @@ from django.template import Context, Template
 
 from formulator.conf import settings
 from formulator.models import Form, Field, FieldSet, FieldAttribute, WidgetAttribute
+from crispy_forms.layout import Fieldset
+
 from .forms import FloppyTestForm, CrispyTestForm, base_fields
 
 FIELDS = settings.FORMULATOR_FIELDS
@@ -105,7 +107,7 @@ def get_formulator_fieldset_form():
     """
     Creates and saves models for formulator instance creation
     """
-    fm_form = Form.objects.create(name='Fielset form')
+    fm_form = Form.objects.create(name='Fieldset form')
 
     fm_fieldset = FieldSet.objects.create(
                             name="Fieldset",
@@ -116,7 +118,7 @@ def get_formulator_fieldset_form():
     for field_type in base_fields:
         Field.objects.create(
                 name=field_type.title(),
-                label="%s:" % field_type.title(),
+                label=field_type.title(),
                 field_type=field_type,
                 required=False,
                 form=fm_form,
@@ -165,12 +167,19 @@ class TestDjangoFormFormulators():
 @pytest.mark.django_db
 class TestDjangoFormFieldsetFormulators():
 
+    def test_fieldset(self):
+        """
+        Test that the form has a fieldset
+        """
+        formulator_form = get_formulator_fieldset_form().form_class_factory()()
+        fs = formulator_form.helper.layout.fields[0]
+        assert(isinstance(fs, Fieldset))
+        
     def test_html_output(self):
         """
         Test form html equality
         """
         django_form = CrispyTestForm()
         formulator_form = get_formulator_fieldset_form().form_class_factory()()
-        import ipdb; ipdb.set_trace()
         assert(render_form(django_form, use_crispy=True) == render_form(formulator_form, use_crispy=True))
 

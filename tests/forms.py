@@ -123,7 +123,7 @@ class FloppyTestForm(BaseForm, floppy_forms.Form):
 
 class CrispyTestForm(forms.Form):
 
-    FORM_CLASS  = forms
+    FORM_CLASS  = floppy_forms
 
     def __init__(self, *args , **kwargs):
 
@@ -133,6 +133,7 @@ class CrispyTestForm(forms.Form):
 
         field_list = list(self.fields.keys())
         self.helper = FormHelper()
+        self.helper.form_id = 'fieldset-form'
         self.helper.layout = Layout(
             Fieldset(
                 'This is a fieldset',
