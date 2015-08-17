@@ -15,7 +15,7 @@ INSTALLED_APPS = [
     'crispy_forms',
 ]
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'tests.urls'
 
 MIDDLEWARE_CLASSES = []
 

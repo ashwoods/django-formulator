@@ -136,8 +136,7 @@ class CrispyTestForm(forms.Form):
         self.helper.layout = Layout(
             Fieldset(
                 'This is a fieldset',
-                field_list,
-                HTML("""<p>TEST-TEST-TEST</p>""")
+                *field_list
             ),
         )
 
