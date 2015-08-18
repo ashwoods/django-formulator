@@ -9,9 +9,9 @@ django-formulator
     :alt: Travis CI Status
     :target: https://travis-ci.org/ashwoods/django-formulator
 
-.. image:: https://img.shields.io/coveralls/ashwoods/django-formulator/master.svg
+.. image:: https://coveralls.io/repos/ashwoods/django-formulator/badge.svg?branch=master&service=github 
+   :target: https://coveralls.io/github/ashwoods/django-formulator?branch=master
    :alt: Coverage status
-   :target: https://coveralls.io/r/ashwoods/django-formulator
 
 .. image:: https://readthedocs.org/projects/django-formulator/badge/?version=latest&style=flat
    :alt: ReadTheDocs
