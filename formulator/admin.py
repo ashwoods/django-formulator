@@ -7,6 +7,7 @@ class FieldInline(admin.TabularInline):
     sortable_field_name = "position"
     extra = 0
     fields = ('name', 'field', 'widget', 'maxlength', 'required', 'position',)
+    fk_name = 'form'
 
 
 class FormAdmin(admin.ModelAdmin):
