@@ -31,7 +31,7 @@ class Form(settings.FORMULATOR_BASE_MODEL):
     # common HTML form attributes
     form_name = models.CharField(max_length=100, blank=True)
     form_action = models.CharField(max_length=250, blank=True)
-    form_method = models.IntegerField(max_length=10, choices=METHODS, default=METHODS.post)
+    form_method = models.IntegerField(choices=METHODS, default=METHODS.post)
     form_id = AutoSlugField(populate_from='name')
     form_class = models.CharField(max_length=250, blank=True)
 
