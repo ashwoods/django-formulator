@@ -133,7 +133,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     name = models.CharField(max_length=200,
                             help_text=_("""A short name to build the database field """))
 
-    field_id = AutoSlugField(unique_with='form', populate_from=lambda instance: instance.name.lower())
+    field_id = AutoSlugField(unique_with='form', populate_from='name')
     position = PositionField(collection='form')
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
 
