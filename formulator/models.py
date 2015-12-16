@@ -160,7 +160,6 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         help_text=_('Boolean that specifies whether the field is hidden.'))
 
     class Meta:
-        order_with_respect_to = 'form'
         ordering = ['form', 'position']
 
     def formfield_instance_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
