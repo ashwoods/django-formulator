@@ -166,10 +166,12 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         """Returns an instance of a form field"""
 
         # Get the field class for this particular field
+        # if field_class is None:
+        #     for cls, n in settings.FORMULATOR_FIELDS:
+        #         if n == self.field_type:
+        #             field_class = cls
         if field_class is None:
-            for cls, n in settings.FORMULATOR_FIELDS:
-                if n == self.field_type:
-                    field_class = cls
+            field_class = self.field_type
 
         if field_attrs is None:
             field_attrs = dict(self.fieldattribute_set.values_list('key', 'value'))
@@ -185,13 +187,11 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         if not self.widget:
             widget = getattr(field, 'widget', None)
         else:
-            for cls, n in settings.FORMULATOR_WIDGETS:
-                if n == self.widget:
-                    widget_class = cls
+            module_name, class_name = self.widget.rsplit(".", 1)
+            module = importlib.import_module(module_name)
+            widget = getattr(module, class_name)
 
-                    module_name, class_name = widget_class.rsplit(".", 1)
-                    module = importlib.import_module(module_name)
-                    widget = getattr(module, class_name)
+
 
         field_attrs.update({
             'required': self.required,
@@ -209,6 +209,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
         if widget:
             field_attrs['widget'] = widget(attrs=widget_attrs)
+
 
         return field(**field_attrs)
 

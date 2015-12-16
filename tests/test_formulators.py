@@ -12,7 +12,6 @@ from crispy_forms.layout import Fieldset
 
 from .forms import FloppyTestForm, CrispyTestForm, base_fields
 
-FIELDS = settings.FORMULATOR_FIELDS
 REQUIRE_EXTRA_PARAMS = [
     'RegexField',
     'ComboField',
@@ -38,15 +37,15 @@ def get_formulator_form():
 
     Field.objects.create(
         name="honeypot",
-        field_type="CharField",
+        field_type="floppyforms.fields.CharField",
         required=False,
-        widget="HiddenInput",
+        widget="django.forms.widgets.HiddenInput",
         form=fm_form,
     )
 
     Field.objects.create(
         name="firstname",
-        field_type="CharField",
+        field_type="floppyforms.fields.CharField",
         label='Your first name?',
         form=fm_form,
         required=True
@@ -54,7 +53,7 @@ def get_formulator_form():
 
     Field.objects.create(
         name="lastname",
-        field_type="CharField",
+        field_type="floppyforms.fields.CharField",
         label='Your last name:',
         form=fm_form,
         required=True,
@@ -63,7 +62,7 @@ def get_formulator_form():
     Field.objects.create(
         name="username",
         label="Username:",
-        field_type="CharField",
+        field_type="floppyforms.fields.CharField",
         form=fm_form,
         max_length=30,
         placeholder='username here',
@@ -72,8 +71,8 @@ def get_formulator_form():
     Field.objects.create(
         name="password",
         label='Password:',
-        field_type="CharField",
-        widget='PasswordInput',
+        field_type="floppyforms.fields.CharField",
+        widget='floppyforms.widgets.PasswordInput',
         help_text='Make sure to use a secure password.',
         form=fm_form,
         required=True,
@@ -81,9 +80,9 @@ def get_formulator_form():
 
     Field.objects.create(
         name="password2",
-        field_type="CharField",
+        field_type="floppyforms.fields.CharField",
         label='Retype password',
-        widget='PasswordInput',
+        widget='floppyforms.widgets.PasswordInput',
         form=fm_form,
         required=True,
     )
@@ -91,13 +90,13 @@ def get_formulator_form():
     Field.objects.create(
         name="age",
         label="Age:",
-        field_type="IntegerField",
+        field_type="floppyforms.fields.IntegerField",
         required=False,
         form=fm_form
     )
 
     for field_type in base_fields:
-        Field.objects.create(name=field_type.title(), label="%s:" % field_type.title(), field_type=field_type, required=False, form=fm_form)
+        Field.objects.create(name=field_type.title(), label="%s:" % field_type.title(), field_type='floppyforms.fields.' + field_type, required=False, form=fm_form)
 
     return fm_form
 
@@ -119,7 +118,7 @@ def get_formulator_fieldset_form():
         Field.objects.create(
             name=field_type.title(),
             label=field_type.title(),
-            field_type=field_type,
+            field_type='floppyforms.fields.' + field_type,
             required=False,
             form=fm_form,
             fieldset=fm_fieldset
