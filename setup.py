@@ -28,7 +28,6 @@ setup(
     license='MIT',
     install_requires=[
      'django>=1.7',
-     'django-positions',
      'django-model-utils',
      'django-appconf',
      'django-autoslug',
