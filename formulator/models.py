@@ -8,7 +8,6 @@ from django.utils.functional import cached_property
 
 from model_utils import Choices
 from autoslug import AutoSlugField
-from positions import PositionField
 
 from formulator.conf import settings
 
@@ -96,13 +95,9 @@ class Form(settings.FORMULATOR_BASE_MODEL):
 
 class FieldSet(settings.FORMULATOR_BASE_MODEL):
     form = models.ForeignKey(Form)
-    position = PositionField(collection='form')
-
+    position = models.PositiveIntegerField(default=0, db_index=True)
     name = models.CharField(max_length=100)
     legend = models.CharField(max_length=200)
-
-    class Meta:
-        ordering = ['form', 'position']
 
     @cached_property
     def safe_legend(self):
@@ -115,6 +110,10 @@ class FieldSet(settings.FORMULATOR_BASE_MODEL):
     def fields(self):
         return self.field_set.all()
 
+    class Meta:
+        ordering = ['form', 'position']
+        unique_together = ['form', 'position']
+
 
 class Field(settings.FORMULATOR_BASE_MODEL):
     """
@@ -123,6 +122,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
     """
 
     form = models.ForeignKey(Form)
+    position = models.PositiveIntegerField(default=0, db_index=True)
     fieldset = models.ForeignKey(FieldSet, null=True)
     label = models.CharField(max_length=200,
                              help_text=_("""A verbose name for this field, for use in displaying this
@@ -134,7 +134,7 @@ class Field(settings.FORMULATOR_BASE_MODEL):
                             help_text=_("""A short name to build the database field """))
 
     field_id = AutoSlugField(unique_with='form', populate_from='name')
-    position = PositionField(collection='form')
+
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
 
     # exceptions
@@ -159,8 +159,10 @@ class Field(settings.FORMULATOR_BASE_MODEL):
         default=False,
         help_text=_('Boolean that specifies whether the field is hidden.'))
 
+
     class Meta:
         ordering = ['form', 'position']
+        unique_together = ['form', 'position']
 
     def formfield_instance_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
         """Returns an instance of a form field"""
@@ -212,6 +214,8 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
 
         return field(**field_attrs)
+
+
 
 
 class FieldAttribute(settings.FORMULATOR_BASE_MODEL):

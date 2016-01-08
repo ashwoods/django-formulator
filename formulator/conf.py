@@ -4,6 +4,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from appconf import AppConf  # noqa
 from model_utils.models import TimeStampedModel
 
+
 import floppyforms as forms
 
 
