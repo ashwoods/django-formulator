@@ -5,10 +5,11 @@ import importlib
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.utils.functional import cached_property
+from django.utils.encoding import python_2_unicode_compatible
 
 from model_utils import Choices
 from autoslug import AutoSlugField
-
+from model_utils.models import TimeStampedModel
 from formulator.conf import settings
 
 
@@ -17,7 +18,20 @@ if settings.FORMULATOR_CRISPY_ENABLED:
     from crispy_forms import layout
 
 
-class Form(settings.FORMULATOR_BASE_MODEL):
+@python_2_unicode_compatible
+class BaseModel(TimeStampedModel):
+
+    def __str__(self):
+        return '<%s:%s>' % (self.__class__.__name__, self.pk)
+
+    class Meta:
+        abstract=True
+
+
+BaseModelClass = settings.FORMULATOR_BASE_MODEL or BaseModel
+
+
+class Form(BaseModelClass):
 
     ENCTYPES = Choices((0, 'urlencoded', 'application/x-www-form-urlencoded'),
                        (1, 'multipart', 'multipart/form-data'),
@@ -93,7 +107,7 @@ class Form(settings.FORMULATOR_BASE_MODEL):
         return type(str(self.form_id), (form_class,), attrs)
 
 
-class FieldSet(settings.FORMULATOR_BASE_MODEL):
+class FieldSet(BaseModelClass):
     form = models.ForeignKey(Form)
     position = models.PositiveIntegerField(default=0, db_index=True)
     name = models.CharField(max_length=100)
@@ -115,7 +129,7 @@ class FieldSet(settings.FORMULATOR_BASE_MODEL):
         unique_together = ['form', 'position']
 
 
-class Field(settings.FORMULATOR_BASE_MODEL):
+class Field(BaseModelClass):
     """
     Stores the information for a django form field.
 
@@ -218,19 +232,19 @@ class Field(settings.FORMULATOR_BASE_MODEL):
 
 
 
-class FieldAttribute(settings.FORMULATOR_BASE_MODEL):
+class FieldAttribute(BaseModelClass):
     field = models.ForeignKey(Field)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
 
 
-class WidgetAttribute(settings.FORMULATOR_BASE_MODEL):
+class WidgetAttribute(BaseModelClass):
     field = models.ForeignKey(Field)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100)
 
 
-class Choices(settings.FORMULATOR_BASE_MODEL):
+class Choices(BaseModelClass):
     field = models.ForeignKey(Field)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
