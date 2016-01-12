@@ -15,8 +15,7 @@ base_fields = (
     'Field', 'CharField', 'IntegerField', 'DateField', 'TimeField',
     'DateTimeField', 'EmailField', 'FileField', 'ImageField', 'URLField',
     'BooleanField', 'NullBooleanField', 'ChoiceField', 'MultipleChoiceField',
-    'FloatField', 'DecimalField', 'SlugField', 'IPAddressField',
-    'GenericIPAddressField', 'TypedChoiceField',
+    'FloatField', 'DecimalField', 'SlugField', 'GenericIPAddressField', 'TypedChoiceField',
     'TypedMultipleChoiceField', 'ComboField', 'MultiValueField',
     'SplitDateTimeField',
 )
