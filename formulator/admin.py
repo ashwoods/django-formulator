@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Form, Field
+from .models import Form, Field, Choice
 
 
 class FieldInline(admin.TabularInline):
@@ -15,4 +15,8 @@ class FormAdmin(admin.ModelAdmin):
     inlines = [FieldInline]
 
 
-admin.site.register(Form, FormAdmin)
+class ChoiceAdmin(admin.ModelAdmin):
+    list_display = ['field', 'key', 'value']
+
+
+admin.site.register(Form, FormAdmin, ChoiceAdmin)

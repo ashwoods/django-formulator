@@ -1,6 +1,6 @@
 django-floppyforms>=1.4.1
 django-crispy-forms>=1.4.0
-django-autoslug==1.8
+django-autoslug
 flake8
 coverage
 SQLAlchemy
