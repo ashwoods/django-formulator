@@ -15,8 +15,4 @@ class FormAdmin(admin.ModelAdmin):
     inlines = [FieldInline]
 
 
-class ChoiceAdmin(admin.ModelAdmin):
-    list_display = ['field', 'key', 'value']
-
-
-admin.site.register(Form, FormAdmin, ChoiceAdmin)
+admin.site.register(Form, FormAdmin, Choice)
