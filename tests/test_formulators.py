@@ -41,6 +41,7 @@ def get_formulator_form():
         required=False,
         widget="django.forms.widgets.HiddenInput",
         form=fm_form,
+        position=0
     )
 
     Field.objects.create(
@@ -48,7 +49,8 @@ def get_formulator_form():
         field_type="floppyforms.fields.CharField",
         label='Your first name?',
         form=fm_form,
-        required=True
+        required=True,
+        position=1
     )
 
     Field.objects.create(
@@ -57,6 +59,7 @@ def get_formulator_form():
         label='Your last name:',
         form=fm_form,
         required=True,
+        position=2
     )
 
     Field.objects.create(
@@ -66,6 +69,7 @@ def get_formulator_form():
         form=fm_form,
         max_length=30,
         placeholder='username here',
+        position=3
     )
 
     Field.objects.create(
@@ -76,6 +80,7 @@ def get_formulator_form():
         help_text='Make sure to use a secure password.',
         form=fm_form,
         required=True,
+        position=4
     )
 
     Field.objects.create(
@@ -85,6 +90,7 @@ def get_formulator_form():
         widget='floppyforms.widgets.PasswordInput',
         form=fm_form,
         required=True,
+        position=5
     )
 
     Field.objects.create(
@@ -92,11 +98,23 @@ def get_formulator_form():
         label="Age:",
         field_type="floppyforms.fields.IntegerField",
         required=False,
-        form=fm_form
+        form=fm_form,
+        position=6
     )
 
+    pos = 7
+    
     for field_type in base_fields:
-        Field.objects.create(name=field_type.title(), label="%s:" % field_type.title(), field_type='floppyforms.fields.' + field_type, required=False, form=fm_form)
+        Field.objects.create(
+            name=field_type.title(),
+            label="%s:" % field_type.title(),
+            field_type='floppyforms.fields.' + field_type,
+            required=False,
+            form=fm_form,
+            position=pos
+        )
+        
+        pos += 1
 
     return fm_form
 
@@ -114,6 +132,8 @@ def get_formulator_fieldset_form():
         form=fm_form
     )
 
+    pos = 0
+
     for field_type in base_fields:
         Field.objects.create(
             name=field_type.title(),
@@ -121,8 +141,11 @@ def get_formulator_fieldset_form():
             field_type='floppyforms.fields.' + field_type,
             required=False,
             form=fm_form,
-            fieldset=fm_fieldset
+            fieldset=fm_fieldset,
+            position=pos
         )
+        
+        pos += 1
 
     return fm_form
 
