@@ -80,6 +80,8 @@ class FloppyTestForm(BaseForm, floppy_forms.Form):
         for field in base_fields:
             self.fields[field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
 
+        self.fields['choicefield'].choices = [('1', 'One'), ('2', 'Two'), ('3', 'Three')]
+
 
 class CrispyTestForm(forms.Form):
 
@@ -91,6 +93,8 @@ class CrispyTestForm(forms.Form):
         for field in base_fields:
             self.fields[field.lower()] = getattr(self.FORM_CLASS, field)(label=field.title(), required=False)
 
+
+        
         field_list = list(self.fields.keys())
         self.helper = FormHelper()
         self.helper.form_id = 'fieldset-form'
