@@ -10,9 +10,11 @@ DATABASES = {
 }
 
 INSTALLED_APPS = [
+    'django.contrib.contenttypes',
     'formulator',
     'floppyforms',
     'crispy_forms',
+
 ]
 
 ROOT_URLCONF = 'tests.urls'

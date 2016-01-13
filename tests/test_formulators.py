@@ -7,7 +7,7 @@ import pytest
 from django.template import Context, Template
 
 from formulator.conf import settings
-from formulator.models import Form, Field, FieldSet
+from formulator.models import Form, Field, FieldSet, Choice
 from crispy_forms.layout import Fieldset
 
 from .forms import FloppyTestForm, CrispyTestForm, base_fields
@@ -116,6 +116,13 @@ def get_formulator_form():
         
         pos += 1
 
+    # Set choices for choicefield
+    choice_field = fm_form.field_set.get(field_id='choicefield')
+    
+    Choice.objects.create(field=choice_field, key=1, value="One")
+    Choice.objects.create(field=choice_field, key=2, value="Two")
+    Choice.objects.create(field=choice_field, key=3, value="Three")
+
     return fm_form
 
 
@@ -144,7 +151,7 @@ def get_formulator_fieldset_form():
             fieldset=fm_fieldset,
             position=pos
         )
-        
+
         pos += 1
 
     return fm_form
@@ -181,6 +188,15 @@ class TestDjangoFormFormulators():
         django_form = FloppyTestForm()
         formulator_form = get_formulator_form().form_class_factory()()
         assert(render_form(django_form, use_crispy=False) == render_form(formulator_form, use_crispy=False))
+
+    def test_choices(self):
+        """
+        Tests that choices have been set for ChoiceField
+        """
+        django_form = FloppyTestForm()
+        formulator_form = get_formulator_form().form_class_factory()()
+        choices = formulator_form.fields['choicefield'].choices 
+        assert choices == [('1', 'One'), ('2', 'Two'), ('3', 'Three')]
 
 
 @pytest.mark.django_db

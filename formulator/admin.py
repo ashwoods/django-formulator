@@ -15,4 +15,5 @@ class FormAdmin(admin.ModelAdmin):
     inlines = [FieldInline]
 
 
-admin.site.register(Form, FormAdmin, Choice)
+admin.site.register(Form, FormAdmin)
+admin.site.register(Choice)

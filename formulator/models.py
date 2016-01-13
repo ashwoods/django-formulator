@@ -70,6 +70,11 @@ class Form(BaseModelClass):
         for field in self.field_set.all():
             attrs[field.field_id] = field.formfield_instance_factory()
 
+        # set choices
+        for choice in Choice.objects.all():
+            if choice.field in self.field_set.all():
+                attrs[choice.field.field_id].choices.append((choice.key, choice.value))
+
         if settings.FORMULATOR_CRISPY_ENABLED:
 
             layouts = []
@@ -244,7 +249,7 @@ class WidgetAttribute(BaseModelClass):
     value = models.CharField(max_length=100)
 
 
-class Choices(BaseModelClass):
+class Choice(BaseModelClass):
     field = models.ForeignKey(Field)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
