@@ -68,7 +68,7 @@ class Form(BaseModelClass):
         self.full_clean()
 
         for field in self.field_set.all():
-            attrs[field.field_id] = field.formfield_instance_factory()
+            attrs[field.field_id.replace('-', '_')] = field.formfield_instance_factory()
 
         # set choices
         for choice in Choice.objects.all():
