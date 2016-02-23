@@ -74,7 +74,7 @@ class Form(BaseModelClass):
         # set choices
         for choice in Choice.objects.all():
             if choice.field in self.field_set.all():
-                attrs[choice.field.field_id].choices.append((choice.key, choice.value))
+                attrs[choice.field.field_id.replace('-', '_')].choices.append((choice.key, choice.value))
 
         if settings.FORMULATOR_CRISPY_ENABLED:
 
@@ -186,7 +186,6 @@ class Field(BaseModelClass):
 
     class Meta:
         ordering = ['form', 'position']
-        unique_together = ['form', 'position']
 
     def formfield_instance_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
         """Returns an instance of a form field"""
@@ -257,5 +256,9 @@ class WidgetAttribute(BaseModelClass):
 
 class Choice(BaseModelClass):
     field = models.ForeignKey(Field)
+    position = models.PositiveIntegerField(default=0, db_index=True)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        ordering = ['field', 'position']
