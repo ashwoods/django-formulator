@@ -31,6 +31,7 @@ class BaseModel(TimeStampedModel):
 BaseModelClass = settings.FORMULATOR_BASE_MODEL or BaseModel
 
 
+@python_2_unicode_compatible
 class Form(BaseModelClass):
 
     ENCTYPES = Choices((0, 'urlencoded', 'application/x-www-form-urlencoded'),
@@ -111,6 +112,9 @@ class Form(BaseModelClass):
 
         return type(str(self.form_id), (form_class,), attrs)
 
+    def __str__(self):
+        return '%s %s: %s' % (self.__class__.__name__, self.pk, self.name)
+
 
 class FieldSet(BaseModelClass):
     form = models.ForeignKey(Form)
@@ -134,6 +138,7 @@ class FieldSet(BaseModelClass):
         unique_together = ['form', 'position']
 
 
+@python_2_unicode_compatible
 class Field(BaseModelClass):
     """
     Stores the information for a django form field.
@@ -234,7 +239,8 @@ class Field(BaseModelClass):
 
         return field(**field_attrs)
 
-
+    def __str__(self):
+        return '%s %s: %s' % (self.__class__.__name__, self.pk, self.name)
 
 
 class FieldAttribute(BaseModelClass):
