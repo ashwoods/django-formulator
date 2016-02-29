@@ -9,6 +9,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from model_utils import Choices
 from autoslug import AutoSlugField
+from autoslug.settings import slugify as default_slugify
 from model_utils.models import TimeStampedModel
 from formulator.conf import settings
 
@@ -16,6 +17,11 @@ from formulator.conf import settings
 if settings.FORMULATOR_CRISPY_ENABLED:
     from crispy_forms.helper import FormHelper
     from crispy_forms import layout
+
+
+
+def custom_slugify(value):
+    return default_slugify(value).replace('-', '_')
 
 
 @python_2_unicode_compatible
@@ -157,7 +163,7 @@ class Field(BaseModelClass):
     name = models.CharField(max_length=200,
                             help_text=_("""A short name to build the database field """))
 
-    field_id = AutoSlugField(unique_with='form', populate_from='name')
+    field_id = AutoSlugField(unique_with='form', populate_from='name', slugify=custom_slugify, sep='_')
 
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
 
