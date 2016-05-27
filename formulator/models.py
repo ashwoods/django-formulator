@@ -154,37 +154,39 @@ class Field(BaseModelClass):
     form = models.ForeignKey(Form)
     position = models.PositiveIntegerField(default=0, db_index=True)
     fieldset = models.ForeignKey(FieldSet, null=True)
-    label = models.CharField(max_length=200,
-                             help_text=_("""A verbose name for this field, for use in displaying this
-                                        field in a form. By default, Django will use a "pretty"
-                                        version of the form field name, if the Field is part of a
-                                        Form. """))
+    label = models.CharField(
+        max_length=200,
+        help_text=_("""A verbose name for this field, for use in displaying this
+                       field in a form. By default, Django will use a "pretty"
+                       version of the form field name, if the Field is part of a
+                       Form. """)
+    )
 
-    name = models.CharField(max_length=200,
-                            help_text=_("""A short name to build the database field """))
-
-    field_id = AutoSlugField(unique_with='form', populate_from='name', slugify=custom_slugify, sep='_')
-
+    field_id = AutoSlugField(unique_with='form', populate_from='label', slugify=custom_slugify, sep='_')
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
 
-    # exceptions
     max_length = models.IntegerField(blank=True, null=True)
     placeholder = models.CharField(max_length=255, blank=True)
-
     required = models.BooleanField(default=True)
-    help_text = models.TextField(blank=True,
-                                 help_text=_("An optional string to use as 'help text' for this Field."))
-
-    initial = models.CharField(max_length=200, blank=True,
-                               help_text=_("""A value to use in this Field's initial display. This value
-                                          is *not* used as a fallback if data isn't given. """))
-
-    widget = models.CharField(max_length=100, choices=settings.FORMULATOR_WIDGETS, blank=True,
-                              help_text=_("""A Widget class, or instance of a Widget class, that should
-                                           be used for this Field when displaying it. Each Field has a
-                                           default Widget that it'll use if you don't specify this. In
-                                           most cases, the default widget is TextInput."""))
-
+    help_text = models.TextField(
+        blank=True,
+        help_text=_("An optional string to use as 'help text' for this Field.")
+    )
+    initial = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text=_("""A value to use in this Field's initial display. This value
+                       is *not* used as a fallback if data isn't given. """)
+    )
+    widget = models.CharField(
+        max_length=100,
+        choices=settings.FORMULATOR_WIDGETS,
+        blank=True,
+        help_text=_("""A Widget class, or instance of a Widget class, that should
+                       be used for this Field when displaying it. Each Field has a
+                       default Widget that it'll use if you don't specify this. In
+                       most cases, the default widget is TextInput.""")
+    )
     show_hidden_initial = models.BooleanField(
         default=False,
         help_text=_('Boolean that specifies whether the field is hidden.'))
@@ -210,6 +212,7 @@ class Field(BaseModelClass):
         if widget_attrs is None:
             widget_attrs = dict(self.widgetattribute_set.values_list('key', 'value'))
 
+        import ipdb; ipdb.set_trace()
         module_name, class_name = field_class.rsplit(".", 1)
         module = importlib.import_module(module_name)
         field = getattr(module, class_name)
@@ -245,7 +248,7 @@ class Field(BaseModelClass):
         return field(**field_attrs)
 
     def __str__(self):
-        return '%s %s: %s' % (self.__class__.__name__, self.pk, self.name)
+        return '%s %s: %s' % (self.__class__.__name__, self.pk, self.field_id)
 
 
 class FieldAttribute(BaseModelClass):
