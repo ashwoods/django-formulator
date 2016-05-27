@@ -212,7 +212,6 @@ class Field(BaseModelClass):
         if widget_attrs is None:
             widget_attrs = dict(self.widgetattribute_set.values_list('key', 'value'))
 
-        import ipdb; ipdb.set_trace()
         module_name, class_name = field_class.rsplit(".", 1)
         module = importlib.import_module(module_name)
         field = getattr(module, class_name)
