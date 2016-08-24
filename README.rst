@@ -13,6 +13,14 @@ django-formulator
    :target: https://coveralls.io/github/ashwoods/django-formulator?branch=master
    :alt: Coverage status
 
+.. image:: https://codeclimate.com/repos/57bd6a42a1089006f70021b6/badges/877b308ef3fc32e938e7/gpa.svg
+   :target: https://codeclimate.com/repos/57bd6a42a1089006f70021b6/feed
+   :alt: Code Climate
+
+.. image:: https://api.codacy.com/project/badge/Grade/a6114b28442f4412b0959afc5f7df54d
+   :target: https://www.codacy.com/app/ashwoods/django-formulator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ashwoods/django-formulator&amp;utm_campaign=Badge_Grade
+   :alt: Codacy
+
 .. image:: https://readthedocs.org/projects/django-formulator/badge/?version=latest&style=flat
    :alt: ReadTheDocs
    :target: http://django-formulator.readthedocs.org/en/latest/

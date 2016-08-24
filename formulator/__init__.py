@@ -1,3 +1,4 @@
-# -*- coding: utf-8 -*-
-VERSION = (0, 3, 0, 'dev')
-__version__ = '.'.join((str(each) for each in VERSION[:4]))
+# flake8: noqa
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution('django-formulator').version

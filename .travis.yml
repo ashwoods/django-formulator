@@ -1,27 +1,30 @@
-sudo: no
 language: python
-cache:
-  # Apparently if you override the install command that silently disables the
-  # cache: pip support. This is less than ideal and I've opened up
-  # travis-ci/travis-ci#3239 to hopefully get that addressed. For now I'll
-  # manually add the pip cache directory to the build cache.
-  directories:
-    - ~/.cache/pip
+sudo: false
+python: 3.5
+cache: pip
 
 install:
   - pip wheel -r tests/requirements.txt
   - pip install tox coveralls
 script:
-  - tox
+  - tox -v
 env:
-  global:
-    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
-    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
-  matrix:
-    - TOXENV=py27-django-17
-    - TOXENV=py27-django-18
-    - TOXENV=py33-django-17
-    - TOXENV=py33-django-18
-    - TOXENV=py34-django-17
-    - TOXENV=py34-django-18
+  - TOXENV=py27-dj18
+  - TOXENV=py33-dj18
+  - TOXENV=py34-dj18
+  - TOXENV=py27-dj19
+  - TOXENV=py34-dj19
+  - TOXENV=py35-dj19
+  - TOXENV=py27-dj110
+  - TOXENV=py34-dj110
+  - TOXENV=py35-dj110
 after_success: coveralls
+
+#deploy:
+#  provider: pypi
+#  user: ashwoods
+#  distributions: "sdist bdist_wheel"
+#  on:
+#    tags: true
+#    repo: ashwoods/django-formulator
+#    condition: "$TOXENV = py27-dj110"
