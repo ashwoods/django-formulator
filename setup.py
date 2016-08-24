@@ -1,49 +1,42 @@
-import os
-import re
-import codecs
-from setuptools import setup
-
-
-def read(*parts):
-    filename = os.path.join(os.path.dirname(__file__), *parts)
-    with codecs.open(filename, encoding='utf-8') as fp:
-        return fp.read()
-
-def find_version(*file_paths):
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+from io import open
+from setuptools import find_packages, setup
 
 
 setup(
     name='django-formulator',
-    version=find_version("formulator", "__init__.py"),
-    description='Core library for the formulator service',
+    description='A django library for creating dynamic django form classes.',
     author='Ashley Camba Garrido',
+    author_email='ashwoods@gmail.com',
     url='https://github.com/ashwoods/django-formulator',
-    packages=['formulator'],
-    license='MIT',
+    download_url='https://pypi.python.org/pypi/django-formulator',
+    packages=find_packages(exclude=('tests.*', 'tests', 'example')),
+    license='BSD',
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     install_requires=[
-     'django>=1.7',
+     'django>=1.8',
      'django-model-utils',
      'django-appconf',
      'django-autoslug',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
         'Framework :: Django',
+        'Framework :: Django :: 1.8',
+        'Framework :: Django :: 1.9',
+        'Framework :: Django :: 1.10',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
-        'Topic :: Utilities',
+        'Programming Language :: Python :: 3.5',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     zip_safe=False,
 )
