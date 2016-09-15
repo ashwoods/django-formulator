@@ -18,6 +18,7 @@ setup(
      'django-model-utils',
      'django-appconf',
      'django-autoslug',
+     'django-crispy-forms',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
