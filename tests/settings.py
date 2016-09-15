@@ -1,5 +1,4 @@
-from __future__ import print_function
-
+# -*- coding: utf-8 -*-
 SECRET_KEY = '!5myuh^d23p9$$lo5k$39x&ji!vceayg+wwt472!bgs$0!i3k4'
 
 DATABASES = {
@@ -11,16 +10,12 @@ DATABASES = {
 
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
+    'django.contrib.sites',
     'formulator',
-    'floppyforms',
     'crispy_forms',
 
 ]
 
 ROOT_URLCONF = 'tests.urls'
-
 MIDDLEWARE_CLASSES = []
-
-FORMULATOR_CRISPY_ENABLED = True
-
 CRISPY_TEMPLATE_PACK = 'bootstrap'
