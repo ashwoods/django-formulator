@@ -1,168 +1,134 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 
 import importlib
 
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
-from django.utils.functional import cached_property
-from django.utils.encoding import python_2_unicode_compatible
 
 from model_utils import Choices
 from autoslug import AutoSlugField
-from autoslug.settings import slugify as default_slugify
-from model_utils.models import TimeStampedModel
+
+from crispy_forms.helper import FormHelper
+from crispy_forms import layout
+
 from formulator.conf import settings
 
-
-if settings.FORMULATOR_CRISPY_ENABLED:
-    from crispy_forms.helper import FormHelper
-    from crispy_forms import layout
+from .managers import FormQuerySet
+from .utils import slugify, import_class
 
 
-
-def custom_slugify(value):
-    return default_slugify(value).replace('-', '_')
-
-
-@python_2_unicode_compatible
-class BaseModel(TimeStampedModel):
-
-    def __str__(self):
-        return '<%s:%s>' % (self.__class__.__name__, self.pk)
-
-    class Meta:
-        abstract=True
+forms = importlib.import_module(settings.FORMULATOR_FIELDS_MODULE)
+AbstractBaseModel = import_class(settings.FORMULATOR_ABSTRACT_BASE_MODEL)
 
 
-BaseModelClass = settings.FORMULATOR_BASE_MODEL or BaseModel
+class Form(AbstractBaseModel):
+    """
+    Stores HTML Form Attributes. Provides a factory method `form_factory` that
+    returns a Django Form class by default.
+    """
 
+    ENCTYPES = Choices((0, 'URLENCODED', 'application/x-www-form-urlencoded'),
+                       (1, 'MULTIPART', 'multipart/form-data'),
+                       (2, 'PLAIN', 'text/plain'))
 
-@python_2_unicode_compatible
-class Form(BaseModelClass):
-
-    ENCTYPES = Choices((0, 'urlencoded', 'application/x-www-form-urlencoded'),
-                       (1, 'multipart', 'multipart/form-data'),
-                       (2, 'plain', 'text/plain'))
-
-    METHODS = Choices((0, 'get', 'GET'), (1, 'post', 'POST'))
+    METHODS = Choices((0, 'GET', 'GET'), (1, 'POST', 'POST'))
 
     name = models.CharField(max_length=100, help_text='Name of the Form type')
 
     # common HTML form attributes
     form_name = models.CharField(max_length=100, blank=True)
     form_action = models.CharField(max_length=250, blank=True)
-    form_method = models.IntegerField(choices=METHODS, default=METHODS.post)
-    form_id = AutoSlugField(populate_from='name')
+    form_method = models.IntegerField(choices=METHODS, default=METHODS.POST)
+    form_id = AutoSlugField(populate_from='name', slugify=slugify)
     form_class = models.CharField(max_length=250, blank=True)
 
     form_accept_charset = models.CharField(max_length=100, blank=True)
     form_autocomplete = models.BooleanField(default=False)
     form_novalidate = models.BooleanField(default=False)
-    form_enctype = models.IntegerField(choices=ENCTYPES, default=ENCTYPES.urlencoded)
+    form_enctype = models.IntegerField(choices=ENCTYPES, default=ENCTYPES.URLENCODED)
     form_target = models.CharField(max_length=50, blank=True)
 
-    @cached_property
-    def fieldsets(self):
-        return self.fieldset_set.all().prefetch_related('field_set')
+    objects = FormQuerySet.as_manager()
 
-    def form_class_factory(self, form_class=None, attrs=None):
+    def form_factory(self, form_class=None, attrs=None):
+        """
+        Returns a django Form class or of type `form_class`.
+
+
+        :param form_class: Base class for the factory
+        :param attrs: Extra runtime class attributes
+        :return: Class of type `form_id`
+        """
         if attrs is None:
             attrs = {}
         if form_class is None:
-            form_class = settings.FORMULATOR_DEFAULT_FORM_CLASS
+            form_class = import_class(settings.FORMULATOR_FORM_CLASS)
 
         # again make sure that we have everything we need to create a class
         self.full_clean()
 
-        for field in self.field_set.all():
-            attrs[field.field_id.replace('-', '_')] = field.formfield_instance_factory()
+        for field in self.fields.all():
+            attrs[field.field_id] = field.field_factory()
 
         # set choices
         for choice in Choice.objects.all():
             if choice.field in self.field_set.all():
-                attrs[choice.field.field_id.replace('-', '_')].choices.append((choice.key, choice.value))
+                attrs[choice.field.field_id].choices.append((choice.key, choice.value))
 
-        if settings.FORMULATOR_CRISPY_ENABLED:
+        layouts = []
 
-            layouts = []
+        for fieldset in self.fieldsets.all():
+            fieldset_layout = layout.Fieldset(
+                fieldset.name,
+                *[f.field_id for f in fieldset.fields])
+            layouts.append(fieldset_layout)
+            for field in fieldset.fields:
+                attrs[field.field_id] = field.formfield_instance_factory()
 
-            for fieldset in self.fieldsets:
-                fieldset_fields = fieldset.fields
-
-                fieldset_layout = layout.Fieldset(fieldset.safe_legend, *[f.field_id for f in fieldset_fields])
-                layouts.append(fieldset_layout)
-
-                for field in fieldset_fields:
-                    attrs[field.field_id] = field.formfield_instance_factory()
-
-            helper = getattr(form_class, 'helper', FormHelper())
-            helper.form_id = self.form_id
-            helper.form_action = self.form_action
-            helper.form_method = self.METHODS[self.form_method]
-            helper.attrs = {}
-
-            if self.form_accept_charset:
-                helper.attrs['accept-charset'] = self.form_accept_charset
-            if self.form_autocomplete:
-                helper.attrs['autocomplete'] = self.form_autocomplete
-            if self.form_novalidate:
-                helper.attrs['novalidate'] = self.form_novalidate
-            if self.form_enctype:
-                helper.attrs['enctype'] = self.form_enctype
-            if self.form_target:
-                helper.attrs['target'] = self.form_target
-
-            helper.layout = layout.Layout(*layouts)
-
-            attrs['helper'] = helper
+        helper = getattr(form_class, 'helper', FormHelper())
+        helper.form_id = self.form_id
+        helper.form_action = self.form_action
+        helper.form_method = self.METHODS[self.form_method]
+        helper.attrs = {
+            'accept-charset': self.form_accept_charset,
+            'autocomplete': self.form_autocomplete,
+            'novalidate': self.form_novalidate,
+            'enctype': self.self.get_form_enctype_display(),
+            'target': self.form_target,
+        }
+        helper.attrs = {k:v for k,v in helper.attrs if v}
+        helper.layout = layout.Layout(*layouts)
+        attrs['helper'] = helper
 
         return type(str(self.form_id), (form_class,), attrs)
 
-    def __str__(self):
-        return '%s %s: %s' % (self.__class__.__name__, self.pk, self.name)
 
-
-class FieldSet(BaseModelClass):
-    form = models.ForeignKey(Form)
+class FieldSet(AbstractBaseModel):
+    form = models.ForeignKey(Form, related_name='fieldsets')
     position = models.PositiveIntegerField(default=0, db_index=True)
     name = models.CharField(max_length=100)
-    legend = models.CharField(max_length=200)
-
-    @cached_property
-    def safe_legend(self):
-        try:
-            return self.legend
-        except:
-            return self.name.title()
-
-    @cached_property
-    def fields(self):
-        return self.field_set.all()
 
     class Meta:
         ordering = ['form', 'position']
-        unique_together = ['form', 'position']
+        unique_together = [('form', 'position'), ('form', 'name')]
 
 
-@python_2_unicode_compatible
-class Field(BaseModelClass):
+class Field(AbstractBaseModel):
     """
     Stores the information for a django form field.
 
     """
 
-    form = models.ForeignKey(Form)
+    form = models.ForeignKey(Form, related_name='fields')
     position = models.PositiveIntegerField(default=0, db_index=True)
-    fieldset = models.ForeignKey(FieldSet, null=True)
-    label = models.CharField(
+    fieldset = models.ForeignKey(FieldSet, null=True, related_name='fields')
+    name = models.CharField(
         max_length=200,
-        help_text=_("""A verbose name for this field, for use in displaying this
-                       field in a form. By default, Django will use a "pretty"
-                       version of the form field name, if the Field is part of a
-                       Form. """)
+        help_text=_("Verbose field name and form label ")
     )
-
-    field_id = AutoSlugField(unique_with='form', populate_from='label', slugify=custom_slugify, sep='_')
+    field_id = AutoSlugField(unique_with='form', populate_from='name', slugify=slugify)
     field_type = models.CharField(max_length=100, choices=settings.FORMULATOR_FIELDS)
 
     max_length = models.IntegerField(blank=True, null=True)
@@ -175,95 +141,76 @@ class Field(BaseModelClass):
     initial = models.CharField(
         max_length=200,
         blank=True,
-        help_text=_("""A value to use in this Field's initial display. This value
-                       is *not* used as a fallback if data isn't given. """)
+        help_text=_("Form field initial attribute")
     )
     widget = models.CharField(
         max_length=100,
         choices=settings.FORMULATOR_WIDGETS,
         blank=True,
-        help_text=_("""A Widget class, or instance of a Widget class, that should
-                       be used for this Field when displaying it. Each Field has a
-                       default Widget that it'll use if you don't specify this. In
-                       most cases, the default widget is TextInput.""")
+        help_text=_("Widget class")
     )
-    show_hidden_initial = models.BooleanField(
+    is_hidden = models.BooleanField(
         default=False,
-        help_text=_('Boolean that specifies whether the field is hidden.'))
-
+        help_text=_('If the field is hidden.'))
 
     class Meta:
         ordering = ['form', 'position']
+        unique_together = [('field_id', 'form'), ('field_id', 'fieldset')]
 
-    def formfield_instance_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
+    def field_factory(self, field_class=None, field_attrs=None, widget_attrs=None):
         """Returns an instance of a form field"""
 
-        # Get the field class for this particular field
-        # if field_class is None:
-        #     for cls, n in settings.FORMULATOR_FIELDS:
-        #         if n == self.field_type:
-        #             field_class = cls
         if field_class is None:
             field_class = self.field_type
 
         if field_attrs is None:
-            field_attrs = dict(self.fieldattribute_set.values_list('key', 'value'))
+            field_attrs = dict(self.fieldattributes.values_list('key', 'value'))
 
         if widget_attrs is None:
-            widget_attrs = dict(self.widgetattribute_set.values_list('key', 'value'))
+            widget_attrs = dict(self.widgetattributes.values_list('key', 'value'))
 
-        module_name, class_name = field_class.rsplit(".", 1)
-        module = importlib.import_module(module_name)
-        field = getattr(module, class_name)
+        field = import_class(field_class)
 
-        # Get the widget class for this particular field
         if not self.widget:
             widget = getattr(field, 'widget', None)
         else:
-            module_name, class_name = self.widget.rsplit(".", 1)
-            module = importlib.import_module(module_name)
-            widget = getattr(module, class_name)
-
-
-
-        field_attrs.update({
-            'required': self.required,
-            'label': self.label,
-            'initial': self.initial,
-            'help_text': self.help_text,
-            'show_hidden_initial': self.show_hidden_initial,
-        })
-
-        if self.max_length:
-            widget_attrs['max_length'] = self.max_length
-
-        if self.placeholder:
-            widget_attrs['placeholder'] = self.placeholder
-
+            widget = import_class(self.widget)
         if widget:
             field_attrs['widget'] = widget(attrs=widget_attrs)
 
+        field_attrs.update({
+            'required': self.required,
+            'label': self.name,
+            'initial': self.initial,
+            'help_text': self.help_text,
+            'show_hidden_initial': self.show_hidden_initial,
+            'max_length': self.max_length,
+            'placeholder': self.placeholder,
+        })
 
         return field(**field_attrs)
 
-    def __str__(self):
-        return '%s %s: %s' % (self.__class__.__name__, self.pk, self.field_id)
 
-
-class FieldAttribute(BaseModelClass):
-    field = models.ForeignKey(Field)
+class FieldAttribute(AbstractBaseModel):
+    field = models.ForeignKey(Field, related_name='field_attributes')
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
 
+    class Meta:
+        unique_together = ('field', 'key')
 
-class WidgetAttribute(BaseModelClass):
-    field = models.ForeignKey(Field)
+
+class WidgetAttribute(AbstractBaseModel):
+    field = models.ForeignKey(Field, related_name='widget_attributes')
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100)
 
+    class Meta:
+        unique_together = ('field', 'key')
 
-class Choice(BaseModelClass):
-    field = models.ForeignKey(Field)
+
+class Choice(AbstractBaseModel):
+    field = models.ForeignKey(Field, related_name='choices')
     position = models.PositiveIntegerField(default=0, db_index=True)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
