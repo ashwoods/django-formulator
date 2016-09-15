@@ -1,15 +1,20 @@
+# -*- coding: utf-8 -*-
 from django.conf import settings  # noqa
 
-
 from appconf import AppConf  # noqa
-import floppyforms as forms
+from . import fields
+
+ALL_FIELDS = [getattr(fields, field) for field in fields.__all__]
 
 
 class FormulatorConf(AppConf):
 
-    WIDGETS = [('%s.%s' % (forms.widgets.__name__, widget), widget) for widget in forms.widgets.__all__]
-    FIELDS = [('%s.%s' % (forms.fields.__name__, field), field) for field in forms.fields.__all__]
-    BASE_MODEL = None
-    CRISPY_ENABLED = False
-    DEFAULT_FORM_LIBRARY = forms
-    DEFAULT_FORM_CLASS = DEFAULT_FORM_LIBRARY.Form
+    WIDGETS = []
+    FIELDS = [
+        ('%s.%s' % (field.__module__, field.__name__), field.__doc__) for field
+        in ALL_FIELDS
+    ]
+    ABSTRACT_BASE_MODEL = 'django.db.models.Model'
+    FIELDS_MODULE = 'django.forms'
+    FORM_CLASS = 'django.forms.Form'
+    SIMPLIFY_ADMIN = True
