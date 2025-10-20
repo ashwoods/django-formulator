@@ -2,10 +2,18 @@ from __future__ import unicode_literals
 
 import importlib
 
-from django.utils.translation import ugettext_lazy as _
+try:
+    from django.utils.translation import ugettext_lazy as _
+except ImportError:
+    from django.utils.translation import gettext_lazy as _
+
 from django.db import models
 from django.utils.functional import cached_property
-from django.utils.encoding import python_2_unicode_compatible
+
+try:
+    from django.utils.encoding import python_2_unicode_compatible
+except ImportError:
+    from six import python_2_unicode_compatible
 
 from model_utils import Choices
 from autoslug import AutoSlugField
@@ -123,7 +131,7 @@ class Form(BaseModelClass):
 
 
 class FieldSet(BaseModelClass):
-    form = models.ForeignKey(Form)
+    form = models.ForeignKey(Form, on_delete=models.CASCADE)
     position = models.PositiveIntegerField(default=0, db_index=True)
     name = models.CharField(max_length=100)
     legend = models.CharField(max_length=200)
@@ -151,9 +159,9 @@ class Field(BaseModelClass):
 
     """
 
-    form = models.ForeignKey(Form)
+    form = models.ForeignKey(Form, on_delete=models.CASCADE)
     position = models.PositiveIntegerField(default=0, db_index=True)
-    fieldset = models.ForeignKey(FieldSet, null=True)
+    fieldset = models.ForeignKey(FieldSet, null=True, on_delete=models.CASCADE)
     label = models.CharField(
         max_length=200,
         help_text=_("""A verbose name for this field, for use in displaying this
@@ -251,19 +259,19 @@ class Field(BaseModelClass):
 
 
 class FieldAttribute(BaseModelClass):
-    field = models.ForeignKey(Field)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
 
 
 class WidgetAttribute(BaseModelClass):
-    field = models.ForeignKey(Field)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100)
 
 
 class Choice(BaseModelClass):
-    field = models.ForeignKey(Field)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE)
     position = models.PositiveIntegerField(default=0, db_index=True)
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=100, blank=True)
